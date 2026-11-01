@@ -1,0 +1,185 @@
+import { Router } from "express";
+import { z } from "zod";
+import { clampInt, HttpError } from "../lib/http.js";
+import { events } from "../lib/events.js";
+import { sendStoredFile } from "../lib/files.js";
+import { discardUpload, fileFromRequest } from "../lib/uploads.js";
+import { store } from "../store/store.js";
+import { requireAgentAuth, type AgentRequest } from "../middleware/auth.js";
+import { upload } from "../middleware/upload.js";
+import { createAgent } from "../services/agents.service.js";
+import {
+  agentCanAccessFile,
+  createMessage,
+  fileById,
+  listAgentConversation,
+} from "../services/messages.service.js";
+import { notifyUserMessage } from "../services/notifications.js";
+import {
+  contactsForAgent,
+  agentConversationTarget,
+} from "../services/topology.service.js";
+import { verifyAgentToken } from "../services/tokens.service.js";
+import type { MessageRecord } from "../types.js";
+
+export const agentApiRouter = Router();
+
+const registerSchema = z.object({
+  token: z.string().min(1, "Token is required."),
+  workspace: z.string().trim().max(1000).optional().default("."),
+  task: z.string().trim().min(1, "Task is required.").max(200),
+  host: z.string().trim().max(200).optional(),
+});
+
+agentApiRouter.post("/register", (request, response) => {
+  const body = registerSchema.parse(request.body);
+  if (!verifyAgentToken(body.token)) {
+    throw new HttpError(401, "Invalid token.");
+  }
+
+  const host = (body.host?.trim() || request.ip || "unknown").slice(0, 200);
+  const workspace = body.workspace.trim() || ".";
+  const { agent, sessionPassword } = createAgent({
+    host,
+    workspace,
+    task: body.task,
+  });
+
+  events.emit({ type: "agents", data: {} });
+  events.emit({ type: "topology", data: {} });
+
+  response.status(201).json({
+    session_id: agent.sessionId,
+    session_pwd: sessionPassword,
+    name: agent.name,
+    host: agent.host,
+    workspace: agent.workspace,
+    task: agent.task,
+  });
+});
+
+agentApiRouter.use(requireAgentAuth);
+
+agentApiRouter.get("/me", (request, response) => {
+  const agent = (request as AgentRequest).agent;
+  response.json({
+    session_id: agent.sessionId,
+    name: agent.name,
+    host: agent.host,
+    workspace: agent.workspace,
+    task: agent.task,
+  });
+});
+
+agentApiRouter.get("/contacts", (request, response) => {
+  const agent = (request as AgentRequest).agent;
+  response.json({ contacts: contactsForAgent(agent.sessionId) });
+});
+
+function agentMessagePayload(message: MessageRecord): Record<string, unknown> {
+  return {
+    id: message.id,
+    from: {
+      role: message.from.role,
+      name: message.from.name,
+      ...(message.from.agentId ? { agent_id: message.from.agentId } : {}),
+    },
+    text: message.text,
+    file: message.file
+      ? {
+          id: message.file.id,
+          name: message.file.name,
+          size: message.file.size,
+          mime: message.file.mime,
+          url: `/api/agent/files/${message.file.id}`,
+          download_url: `/api/agent/files/${message.file.id}?download=1`,
+        }
+      : null,
+    created_at: message.createdAt,
+  };
+}
+
+agentApiRouter.get("/messages", (request, response) => {
+  const agent = (request as AgentRequest).agent;
+  const target = ((request.query.with as string | undefined) ?? "user").trim() || "user";
+  const last = clampInt(request.query.last as string | undefined, 10, 1, 200);
+  const resolved = agentConversationTarget(agent, target);
+  const messages = listAgentConversation(agent.sessionId, target, last);
+
+  const contact =
+    resolved.type === "user"
+      ? { session_id: "user", name: "user", type: "user" as const }
+      : {
+          session_id: resolved.other?.sessionId ?? target,
+          name: resolved.other?.name ?? target,
+          task: resolved.other?.task,
+          type: "agent" as const,
+        };
+
+  response.json({
+    contact,
+    messages: messages.map(agentMessagePayload),
+  });
+});
+
+agentApiRouter.post(
+  "/messages",
+  upload.single("file"),
+  async (request, response, next) => {
+    try {
+      const agent = (request as AgentRequest).agent;
+      const target = (typeof request.body.to === "string" ? request.body.to.trim() : "") || "user";
+      const text = typeof request.body.text === "string" ? request.body.text : "";
+      const file = fileFromRequest(request);
+      const resolved = agentConversationTarget(agent, target);
+
+      const message = createMessage({
+        conversation: resolved.conversation,
+        from: {
+          role: "agent",
+          agentId: agent.sessionId,
+          name: agent.name,
+        },
+        text,
+        file,
+      });
+
+      if (resolved.type === "user") {
+        agent.unread = Math.min(999, agent.unread + 1);
+        store.save();
+        await notifyUserMessage({ agent, message });
+      }
+
+      events.emit({
+        type: "message",
+        data: {
+          conversation: message.conversation,
+          agentIds: [agent.sessionId, ...(resolved.other ? [resolved.other.sessionId] : [])],
+          messageId: message.id,
+          from: agent.sessionId,
+        },
+      });
+      if (resolved.type === "user") {
+        events.emit({ type: "agents", data: {} });
+      }
+
+      response.status(201).json({
+        ok: true,
+        message: agentMessagePayload(message),
+      });
+    } catch (error) {
+      discardUpload(request);
+      next(error);
+    }
+  },
+);
+
+agentApiRouter.get("/files/:id", (request, response) => {
+  const agent = (request as unknown as AgentRequest).agent;
+  const found = fileById(request.params.id);
+  if (!found || !agentCanAccessFile(agent.sessionId, found.message)) {
+    response.status(404).json({ error: "File not found." });
+    return;
+  }
+  sendStoredFile(response, found.file, { download: request.query.download === "1" });
+});

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+web/dist/
+server/data/
+*.log
+.DS_Store
+.agent-hive/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
