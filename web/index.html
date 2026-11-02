@@ -6,6 +6,25 @@
     <meta name="theme-color" content="#0a0c0d" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>agent hive</title>
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem("hive-theme");
+          const hour = new Date().getHours();
+          const theme =
+            saved === "light" || saved === "dark"
+              ? saved
+              : hour >= 7 && hour < 19
+                ? "light"
+                : "dark";
+          document.documentElement.dataset.theme = theme;
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", theme === "light" ? "#f3f0e9" : "#0a0c0d");
+        } catch {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

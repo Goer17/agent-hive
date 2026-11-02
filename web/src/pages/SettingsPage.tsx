@@ -1,13 +1,32 @@
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Clock, Loader2, Moon, Plus, Sun } from "lucide-react";
 import type { GeneratedToken, PublicToken } from "../types";
 import { api, ApiError } from "../api/client";
 import { useSseEvent } from "../lib/hooks";
 import { formatTimestamp, maskToken } from "../lib/format";
 import { toast } from "../lib/toast";
+import type { ThemeMode } from "../lib/theme";
 import { TokenModal } from "./settings/TokenModal";
 
-export function SettingsPage(): React.JSX.Element {
+interface SettingsPageProps {
+  themeMode: ThemeMode;
+  onThemeModeChange: (mode: ThemeMode) => void;
+}
+
+const themeOptions = [
+  { id: "auto", label: "Auto", icon: Clock },
+  { id: "light", label: "Light", icon: Sun },
+  { id: "dark", label: "Dark", icon: Moon },
+] as const satisfies ReadonlyArray<{
+  id: ThemeMode;
+  label: string;
+  icon: typeof Clock;
+}>;
+
+export function SettingsPage({
+  themeMode,
+  onThemeModeChange,
+}: SettingsPageProps): React.JSX.Element {
   const [tokens, setTokens] = useState<PublicToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -72,8 +91,36 @@ export function SettingsPage(): React.JSX.Element {
         <header className="settings-header">
           <div>
             <h1>Settings</h1>
-            <p>Access tokens</p>
+            <p>Preferences</p>
           </div>
+        </header>
+
+        <section className="settings-card appearance-card" aria-label="Appearance">
+          <div className="appearance-copy">
+            <h2>Appearance</h2>
+            <p>Auto follows local time.</p>
+          </div>
+          <div className="theme-switch" role="group" aria-label="Theme">
+            {themeOptions.map((option) => {
+              const Icon = option.icon;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={`theme-option${themeMode === option.id ? " is-active" : ""}`}
+                  aria-pressed={themeMode === option.id}
+                  onClick={() => onThemeModeChange(option.id)}
+                >
+                  <Icon size={14} />
+                  <span>{option.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="settings-section-heading">
+          <h2>Access tokens</h2>
           <button
             type="button"
             className="button button-primary"
@@ -83,7 +130,7 @@ export function SettingsPage(): React.JSX.Element {
             {generating ? <Loader2 size={15} className="spin" /> : <Plus size={15} />}
             Generate token
           </button>
-        </header>
+        </div>
 
         <section className="settings-card" aria-label="Access tokens">
           {loading ? (

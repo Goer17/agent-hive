@@ -13,6 +13,7 @@ import {
   createMessage,
   fileById,
   listAgentConversation,
+  listAgentConversationAfter,
 } from "../services/messages.service.js";
 import { notifyUserMessage } from "../services/notifications.js";
 import {
@@ -104,7 +105,10 @@ agentApiRouter.get("/messages", (request, response) => {
   const target = (queryString(request.query.with) ?? "user").trim() || "user";
   const last = clampInt(queryString(request.query.last), 10, 1, 200);
   const resolved = agentConversationTarget(agent, target);
-  const messages = listAgentConversation(agent.sessionId, target, last);
+  const after = queryString(request.query.after);
+  const messages = after
+    ? listAgentConversationAfter(agent.sessionId, target, after)
+    : listAgentConversation(agent.sessionId, target, last);
 
   const contact =
     resolved.type === "user"

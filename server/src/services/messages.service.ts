@@ -99,15 +99,34 @@ export function lastMessageForAgent(agentId: string): LastMessagePreview | null 
   return null;
 }
 
+function agentConversation(selfId: string, target: string): string {
+  return target === "user" ? userConversation(selfId) : pairConversation(selfId, target);
+}
+
 export function listAgentConversation(
   selfId: string,
   target: "user" | string,
   last: number,
 ): MessageRecord[] {
-  const conversation = target === "user" ? userConversation(selfId) : pairConversation(selfId, target);
+  const conversation = agentConversation(selfId, target);
   return store.data.messages
     .filter((message) => message.conversation === conversation)
     .slice(-last);
+}
+
+export function listAgentConversationAfter(
+  selfId: string,
+  target: "user" | string,
+  afterId: string,
+  limit = 200,
+): MessageRecord[] {
+  const conversation = agentConversation(selfId, target);
+  const messages = store.data.messages.filter(
+    (message) => message.conversation === conversation,
+  );
+  const index = messages.findIndex((message) => message.id === afterId);
+  if (index === -1) badRequest("Unknown message cursor.");
+  return messages.slice(index + 1, index + 1 + limit);
 }
 
 export function deleteConversation(conversation: string): number {

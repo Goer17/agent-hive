@@ -87,6 +87,19 @@ def cmd_make_credentials() -> None:
     print(json.dumps(credentials, separators=(",", ":")))
 
 
+def cmd_last_message_id() -> None:
+    data = read_json()
+    messages = data.get("messages") or []
+    if messages:
+        print(messages[-1].get("id", ""))
+
+
+def cmd_has_messages() -> None:
+    data = read_json()
+    messages = data.get("messages") or []
+    raise SystemExit(0 if messages else 1)
+
+
 def cmd_has_contact(target: str) -> None:
     data = read_json()
     contacts = data.get("contacts") or []
@@ -185,6 +198,10 @@ def main() -> None:
         cmd_make_register_json()
     elif command == "make-credentials":
         cmd_make_credentials()
+    elif command == "last-message-id":
+        cmd_last_message_id()
+    elif command == "has-messages":
+        cmd_has_messages()
     elif command == "has-contact" and len(sys.argv) == 3:
         cmd_has_contact(sys.argv[2])
     elif command == "render-contacts":

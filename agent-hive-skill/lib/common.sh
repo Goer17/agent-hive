@@ -114,6 +114,7 @@ load_session() {
   fi
   credentials="$(cat "$credentials_tmp")"
   rm -f "$credentials_tmp"
+  session_dir="$(cd "$session_dir" && pwd -P)"
 
   configured_id="$(json_field session_id "$credentials" 2>/dev/null || true)"
   [[ "$configured_id" == "$HIVE_SESSION_ID" ]] ||

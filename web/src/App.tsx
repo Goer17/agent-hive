@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { applyTheme, readThemeMode, type ThemeMode } from "./lib/theme";
 import { api, UNAUTHORIZED_EVENT } from "./api/client";
 import type { SseEventDetail } from "./types";
 import { BottomNav, NavRail, type View } from "./components/Navigation";
@@ -21,6 +22,14 @@ function viewFromHash(): View {
 export function App(): React.JSX.Element {
   const [auth, setAuth] = useState<AuthState>("loading");
   const [view, setView] = useState<View>(viewFromHash);
+  const [themeMode, setThemeMode] = useState<ThemeMode>(readThemeMode);
+
+  useEffect(() => {
+    applyTheme(themeMode);
+    if (themeMode !== "auto") return;
+    const interval = window.setInterval(() => applyTheme("auto", false), 60_000);
+    return () => window.clearInterval(interval);
+  }, [themeMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +124,7 @@ export function App(): React.JSX.Element {
             <TopologyPage />
           </div>
           <div className={`view${view === "settings" ? " is-active" : ""}`}>
-            <SettingsPage />
+            <SettingsPage themeMode={themeMode} onThemeModeChange={setThemeMode} />
           </div>
         </main>
         <NavRail view={view} onChange={changeView} />

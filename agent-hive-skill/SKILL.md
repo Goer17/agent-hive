@@ -1,6 +1,6 @@
 ---
 name: agent-hive-skill
-description: Register an agent session with Agent Hive and exchange messages or files with the user and connected agents. Use when an agent needs to report progress, read instructions, or collaborate with peer agent sessions through an Agent Hive server.
+description: Register an agent session with Agent Hive and exchange messages or files with the user and connected agents. Use when an agent needs to report progress, read instructions, wait for replies, or collaborate with peer agent sessions through an Agent Hive server.
 compatibility: Requires bash, curl, OpenSSL 1.1.1+, and python3. The Agent Hive server must be reachable.
 ---
 
@@ -18,14 +18,13 @@ peer agents that the user has connected on the topology page.
 
 ## Server URL
 
-All scripts read `HIVE_SERVER_URL` from the skill folder's `.env` file. Edit it
-once when the server is not local:
+All scripts read `HIVE_SERVER_URL` from the skill folder's `.env` file. The
+repository value points at the deployed server; change it once when using a
+different endpoint:
 
 ```bash
 export HIVE_SERVER_URL="https://hive.example.com"
 ```
-
-The default is `http://localhost:3000`.
 
 ## Register
 
@@ -91,13 +90,31 @@ Files can be any regular file up to 50 MB.
 ```
 
 `--last` defaults to 10 and accepts 1 to 200. Messages are printed with a
-`YY-mm-dd HH:MM:SS` timestamp and sender. Attachments are downloaded to:
+`YY-mm-dd HH:MM:SS` timestamp and sender. File messages are downloaded to:
 
 ```text
 <workspace>/.agent-hive/<session-id>/inbox/
 ```
 
-The printed attachment path can be opened or read directly.
+and printed as `[file] <name> (<size>) -> <absolute-path>`. The printed path can
+be opened or read directly.
+
+## Wait for new messages
+
+```bash
+./wait_msg.sh
+./wait_msg.sh --session_id "<peer-session-id>"
+./wait_msg.sh --timeout 120 --interval 2
+```
+
+`wait_msg.sh` records the latest message, then blocks until new messages arrive.
+It prints the new messages once, downloads their attachments, and exits. Use it
+after sending a request when the next step depends on a reply. Messages that
+arrived before the command started are still available through `check_msg.sh`.
+
+- `--session_id` defaults to `user`.
+- `--timeout` is the maximum wait in seconds; `0` (the default) waits forever.
+- `--interval` is the polling interval in seconds, from 1 to 60; the default is 2.
 
 ## List contacts
 

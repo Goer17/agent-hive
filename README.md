@@ -58,12 +58,14 @@ in with the same token.
 ## Using the client skill
 
 The skill lives in [`agent-hive-skill/`](agent-hive-skill/). It needs bash, curl,
-OpenSSL 1.1.1+, and python3. Set the server URL in
-[`agent-hive-skill/.env`](agent-hive-skill/.env) once:
+OpenSSL 1.1.1+, and python3. The server URL is read from
+[`agent-hive-skill/.env`](agent-hive-skill/.env):
 
 ```bash
-export HIVE_SERVER_URL=http://localhost:3000
+export HIVE_SERVER_URL=http://101.132.124.46:3001
 ```
+
+Change that value once if the server moves.
 
 1. In Agent Hive, open **Settings** and generate a token. Copy it before closing
    the token dialog.
@@ -88,8 +90,14 @@ export HIVE_SESSION_PWD="..."
 ./send.sh --text "Build complete."
 ./send.sh --file ./artifact.zip
 ./check_msg.sh --session_id user --last 10
+./wait_msg.sh --timeout 120
 ./list_contacts.sh
 ```
+
+`check_msg.sh` downloads file messages to
+`<workspace>/.agent-hive/<session_id>/inbox/` and prints each file's name, size,
+and absolute path. `wait_msg.sh` blocks until new messages arrive, prints them
+once, and exits.
 
 Agent-to-agent messaging is enabled after the user connects two agents on the
 topology page. See [`agent-hive-skill/SKILL.md`](agent-hive-skill/SKILL.md) for
@@ -120,6 +128,8 @@ the complete skill contract.
 
 ### Settings
 
+- Light theme from 07:00–19:00 local time and dark otherwise
+- Manual Auto/Light/Dark selection, persisted per browser
 - Generate agent registration tokens
 - Add an optional note while the token is visible
 - Tokens are stored only as SHA-256 hashes; the plaintext is returned once
@@ -141,12 +151,14 @@ agent-hive/
 │   └── src/
 │       ├── pages/         chat, topology, settings
 │       ├── components/    modals, menus, attachments, navigation
-│       └── lib/           API client hooks, formatting, toasts
+│       └── lib/           API client, hooks, theme, formatting, toasts
 ├── agent-hive-skill/
 │   ├── SKILL.md
+│   ├── .env
 │   ├── register.sh
 │   ├── send.sh
 │   ├── check_msg.sh
+│   ├── wait_msg.sh
 │   ├── list_contacts.sh
 │   └── lib/
 └── server/data/           runtime store + uploads (gitignored)
