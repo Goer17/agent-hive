@@ -215,6 +215,10 @@ run it again.
   `--timeout` then bounds the whole run instead of one wait.
 - `--interval` controls how often the server is asked (default 1s).
 - Omit `--session_id` to watch every conversation; `--all` says so explicitly.
+  Watch-all reads each conversation (the user plus every connected peer) and
+  prints a `== <peer session id> ==` header before a peer's batch.
+- `check_msg.sh --quiet` suppresses the "No unread messages." line, which is what
+  the watch-all loop uses to stay silent about conversations that had nothing.
 - Exit status is `0` when a batch was printed (or `--follow` was interrupted)
   and `124` when `--timeout` elapsed with nothing unread.
 - `--once` is accepted and does nothing extra; it documents the default.

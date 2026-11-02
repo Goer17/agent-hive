@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: check_msg.sh [--session_id TARGET] [--last COUNT] [--unread-only]
+Usage: check_msg.sh [--session_id TARGET] [--last COUNT] [--unread-only] [--quiet]
 
 Read recent messages exchanged with the user or a connected agent. TARGET
 defaults to "user" and COUNT defaults to 10. Attachments are downloaded to
@@ -24,6 +24,9 @@ apply to --unread-only. A conversation that was cleared resets the cursor
 automatically (the server rejects an unknown id with 400 and the command falls
 back to the newest 200 messages).
 
+With --quiet, "No unread messages." is not printed; an empty batch produces no
+output at all, which keeps watch-all loops quiet.
+
 Environment:
   HIVE_SESSION_ID   Registered session id
   HIVE_SESSION_PWD  Session password
@@ -33,11 +36,16 @@ EOF
 target="user"
 last="10"
 unread_only="0"
+quiet="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --unread-only)
       unread_only="1"
+      shift
+      ;;
+    --quiet)
+      quiet="1"
       shift
       ;;
     --session_id)
@@ -94,7 +102,7 @@ fi
 if [[ "$unread_only" == "1" ]]; then
   body="$(printf '%s' "$body" | python3 "$HIVE_PY" filter-unread)"
   if ! printf '%s' "$body" | python3 "$HIVE_PY" has-messages; then
-    printf 'No unread messages.\n'
+    [[ "$quiet" == "1" ]] || printf 'No unread messages.\n'
     # Everything up to the newest message was already read, so the cursor can
     # move without losing anything.
     [[ -n "$cursor_tmp" && -s "$cursor_tmp" ]] && mv "$cursor_tmp" "$cursor_file"

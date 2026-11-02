@@ -241,6 +241,14 @@ def cmd_has_contact(target: str) -> None:
         raise SystemExit(1)
 
 
+def cmd_contact_ids() -> None:
+    data = read_json()
+    for contact in data.get("contacts") or []:
+        session_id = str(contact.get("session_id") or "")
+        if session_id and session_id != "user":
+            print(session_id)
+
+
 def cmd_render_contacts() -> None:
     data = read_json()
     contacts = data.get("contacts") or []
@@ -346,6 +354,8 @@ def main() -> None:
         cmd_render_unread()
     elif command == "has-contact" and len(sys.argv) == 3:
         cmd_has_contact(sys.argv[2])
+    elif command == "contact-ids":
+        cmd_contact_ids()
     elif command == "render-contacts":
         cmd_render_contacts()
     elif command == "render-messages":

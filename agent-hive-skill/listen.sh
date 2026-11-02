@@ -93,6 +93,32 @@ started=$SECONDS
 wait_err="$(mktemp)"
 trap 'rm -f "$wait_err"' EXIT
 
+# Print a batch for one conversation, with a header for peers. --quiet keeps
+# conversations without unread messages from adding noise to the watch-all loop.
+# Print the batch separator once, immediately before the first output line.
+print_separator() {
+  if [[ "$printed" == "0" ]]; then
+    printf '%s\n' '-----'
+    printed=1
+  fi
+}
+
+collect_batch() {
+  local conversation="$1"
+  local header="$2"
+  local batch
+  batch="$("$SCRIPT_DIR/check_msg.sh" --unread-only --session_id "$conversation" --quiet)"
+  if [[ -z "$batch" ]]; then
+    return 0
+  fi
+  print_separator
+  if [[ -n "$header" ]]; then
+    printf '== %s ==\n' "$header"
+  fi
+  printf '%s\n' "$batch"
+  return 0
+}
+
 while true; do
   remaining="0"
   if [[ "$timeout" -gt 0 ]]; then
@@ -125,12 +151,30 @@ while true; do
     exit "$wait_status"
   fi
 
-  echo "-----"
-  check_args=(--unread-only)
-  if [[ "$watch_all" != "1" ]]; then
-    check_args+=(--session_id "$target")
+  printed=0
+  if [[ "$watch_all" == "1" ]]; then
+    # The unread summary covers every conversation, so the read step has to as
+    # well: walk the user conversation plus each connected peer.
+    collect_batch "user" ""
+    while IFS= read -r peer; do
+      [[ -n "$peer" ]] || continue
+      collect_batch "$peer" "$peer"
+    done <<<"$(http_get /api/agent/contacts | python3 "$HIVE_PY" contact-ids)"
+  else
+    batch="$("$SCRIPT_DIR/check_msg.sh" --unread-only --session_id "$target" --quiet)"
+    if [[ -n "$batch" ]]; then
+      print_separator
+      printf '%s\n' "$batch"
+    fi
   fi
-  "$SCRIPT_DIR/check_msg.sh" "${check_args[@]}"
+
+  # An empty batch means another reader won the race, so keep waiting instead of
+  # returning a result the caller cannot use. The short pause keeps a stuck
+  # unread counter from turning the retry into a busy loop.
+  if [[ "$printed" == "0" ]]; then
+    sleep 1
+    continue
+  fi
 
   if [[ "$once" == "1" ]]; then
     exit 0
