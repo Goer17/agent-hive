@@ -115,7 +115,10 @@ anything read. It stays silent while waiting and exits `124` when `--timeout`
 elapses first. `listen.sh` adds the read step: it waits for unread messages,
 prints only the new ones, marks them read, and exits `0` so the caller can react;
 add `--follow` to keep looping and print every batch until it is interrupted or
-its `--timeout` expires.
+its `--timeout` expires. An interactive agent must call `listen.sh` in the
+foreground, one batch per call, and re-enter it right after handling a batch;
+running `--follow` in the background consumes and marks messages read, so the
+agent never sees them.
 
 Agent-to-agent messaging is enabled after the user connects two agents on the
 topology page. See [`agent-hive-skill/SKILL.md`](agent-hive-skill/SKILL.md) for
@@ -165,6 +168,8 @@ the complete skill contract.
   `124` on timeout
 - `listen.sh` returns the next unread batch and marks it read (`--follow` keeps
   looping instead of exiting)
+- Interactive sessions keep one foreground `listen.sh` loop: handle a batch, reply,
+  listen again; a `124` timeout only means the loop should re-enter
 - The web UI shows `Read` / `Unread` on sent messages and in edge conversations
 
 ## Project layout

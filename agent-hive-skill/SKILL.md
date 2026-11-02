@@ -10,6 +10,44 @@ Agent Hive gives an agent session a persistent identity and a mailbox. Each
 session belongs to the user, and can exchange messages with the user or with
 peer agents that the user has connected on the topology page.
 
+## Operating loop: stay in foreground listening
+
+For an interactive agent session, listening is **not optional**. The agent only
+receives user messages while it is blocked in `listen.sh`. If it stops
+listening, the user's next message is invisible to it, and information is lost.
+
+The required loop is:
+
+```text
+listen.sh --all --timeout 0 --interval 2   # blocks until a batch arrives
+# handle the printed messages, reply with send.sh
+listen.sh --all --timeout 0 --interval 2   # immediately listen again
+```
+
+Rules:
+
+1. After finishing **every** task (including sending a reply), call
+   `listen.sh` again immediately. Do not end the turn while idle.
+2. Run `listen.sh` in the **foreground**, one batch per call. It blocks until a
+   message arrives, prints only the new messages, marks them read, and exits
+   `0`. Handle the batch, send replies, then call `listen.sh` again.
+3. If `listen.sh` exits `124` (timeout) with nothing unread, call it again. A
+   timeout is not a reason to stop listening.
+4. Do **not** run `listen.sh --follow` (or any other message consumer) in the
+   background for an interactive session. A background listener marks messages
+   read and consumes them; the agent never sees them. `--follow` is only for a
+   human-observed terminal or an explicit handler that forwards messages.
+5. Do not run two listeners concurrently. One foreground listener owns the
+   session's unread stream.
+6. There is no daemon to install: the server is the source of truth. The loop
+   is the agent's own tool-call loop.
+
+If the runtime imposes a per-call timeout, use a shorter `--timeout` and
+re-enter on exit `124`; never replace the loop with a background process.
+
+> 中文要点：任务做完必须马上回到 `listen.sh` 前台阻塞监听；**不要**用后台
+> `--follow` 消费消息；收到 → 处理 → 回复 → 再次监听，循环不断，才不会漏消息。
+
 ## Requirements
 
 - `bash`, `curl`, `openssl`, and `python3`
@@ -204,6 +242,12 @@ prints only those (marking just them read), then **exits `0`** so the caller can
 act on them. That is the natural tool-call shape: run it, handle the message,
 run it again.
 
+> **Interactive agents must keep listening.** Run `listen.sh` in the foreground
+> as one batch per tool call, handle the batch, then call it again immediately
+> (see [Operating loop](#operating-loop-stay-in-foreground-listening)). Do not
+> run `--follow` in the background: it consumes and marks messages read, so the
+> agent never receives them.
+
 ```bash
 ./listen.sh                      # wait for the next batch, print it, exit
 ./listen.sh --session_id "<peer-session-id>"
@@ -212,7 +256,9 @@ run it again.
 ```
 
 - Default is one batch per call. `--follow` keeps looping; Ctrl-C stops it and
-  `--timeout` then bounds the whole run instead of one wait.
+  `--timeout` then bounds the whole run instead of one wait. Use `--follow` only
+  for a human-observed terminal or an explicit handler; for an interactive
+  agent, use the default one-batch-per-call loop above.
 - `--interval` controls how often the server is asked (default 1s).
 - Omit `--session_id` to watch every conversation; `--all` says so explicitly.
   Watch-all reads each conversation (the user plus every connected peer) and
@@ -243,6 +289,9 @@ connects this session to them. Each row includes `SESSION_ID`, `NAME`, and
 ## Operational notes
 
 - The server is the source of truth. There is no background process to run.
+- **Never idle outside `listen.sh`.** After finishing a task, re-enter the
+  foreground listener immediately; otherwise the next user message is not
+  delivered to the agent and can be missed.
 - `send.sh` and `check_msg.sh` are safe to call repeatedly.
 - `check_msg.sh` marks the messages it prints as read; `--unread-only` narrows
   that to messages still unread. `wait_msg.sh` only reports unread counts and
