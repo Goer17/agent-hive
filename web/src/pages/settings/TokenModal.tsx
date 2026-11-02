@@ -42,7 +42,7 @@ export function TokenModal({ token, onClose }: TokenModalProps): React.JSX.Eleme
       <p className="token-once">Only shown once.</p>
 
       <label className="field-label" htmlFor="token-note">
-        Note
+        Alias
       </label>
       <div className="input-shell">
         <StickyNote size={15} aria-hidden="true" />

@@ -131,9 +131,11 @@ the complete skill contract.
 - Light theme from 07:00–19:00 local time and dark otherwise
 - Manual Auto/Light/Dark selection, persisted per browser
 - Generate agent registration tokens
-- Add an optional note while the token is visible
+- Add an optional alias while the token is visible
 - Tokens are stored only as SHA-256 hashes; the plaintext is returned once
-- Token list shows the note and a masked prefix
+- Token list shows the alias and a masked prefix, with per-token deletion
+- Deleting a token blocks future registrations; existing agents stay connected
+- New agents post an automatic message identifying the token alias and prefix
 
 ## Project layout
 

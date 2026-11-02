@@ -14,6 +14,7 @@ import {
   fileById,
   listAgentConversation,
   listAgentConversationAfter,
+  userConversation,
 } from "../services/messages.service.js";
 import { notifyUserMessage } from "../services/notifications.js";
 import {
@@ -32,9 +33,10 @@ const registerSchema = z.object({
   host: z.string().trim().max(200).optional(),
 });
 
-agentApiRouter.post("/register", (request, response) => {
+agentApiRouter.post("/register", async (request, response) => {
   const body = registerSchema.parse(request.body);
-  if (!verifyAgentToken(body.token)) {
+  const tokenRecord = verifyAgentToken(body.token);
+  if (!tokenRecord) {
     throw new HttpError(401, "Invalid token.");
   }
 
@@ -46,6 +48,33 @@ agentApiRouter.post("/register", (request, response) => {
     task: body.task,
   });
 
+  const tokenAlias = tokenRecord.note.trim();
+  const tokenLabel = `${tokenRecord.prefix}-***`;
+  const text = tokenAlias
+    ? `Registered using token alias: ${tokenAlias} (${tokenLabel}).`
+    : `Registered using token ${tokenLabel} (no alias).`;
+  const registrationMessage = createMessage({
+    conversation: userConversation(agent.sessionId),
+    from: {
+      role: "agent",
+      agentId: agent.sessionId,
+      name: agent.name,
+    },
+    text,
+  });
+  agent.unread = Math.min(999, agent.unread + 1);
+  store.save();
+  await notifyUserMessage({ agent, message: registrationMessage });
+
+  events.emit({
+    type: "message",
+    data: {
+      conversation: registrationMessage.conversation,
+      agentIds: [agent.sessionId],
+      messageId: registrationMessage.id,
+      from: agent.sessionId,
+    },
+  });
   events.emit({ type: "agents", data: {} });
   events.emit({ type: "topology", data: {} });
 

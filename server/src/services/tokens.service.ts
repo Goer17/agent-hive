@@ -47,6 +47,14 @@ export function updateTokenNote(tokenId: string, note: string): TokenRecord {
   return token;
 }
 
+export function deleteToken(tokenId: string): TokenRecord {
+  const token = store.data.tokens.find((item) => item.id === tokenId);
+  if (!token) notFound("Token not found.");
+  store.data.tokens = store.data.tokens.filter((item) => item.id !== tokenId);
+  store.save();
+  return token;
+}
+
 export function verifyAgentToken(token: string): TokenRecord | null {
   for (const record of store.data.tokens) {
     if (hashMatches(token, record.tokenHash)) return record;

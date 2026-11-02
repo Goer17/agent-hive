@@ -135,4 +135,6 @@ export const api = {
       method: "PATCH",
       body: { note },
     }),
+  deleteToken: (id: string) =>
+    request<{ deleted: boolean }>(`/api/tokens/${id}`, { method: "DELETE" }),
 };

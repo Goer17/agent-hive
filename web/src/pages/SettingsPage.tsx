@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { Clock, Loader2, Moon, Plus, Sun } from "lucide-react";
+import { Clock, Loader2, Moon, Plus, Sun, Trash2 } from "lucide-react";
 import type { GeneratedToken, PublicToken } from "../types";
 import { api, ApiError } from "../api/client";
 import { useSseEvent } from "../lib/hooks";
 import { formatTimestamp, maskToken } from "../lib/format";
 import { toast } from "../lib/toast";
 import type { ThemeMode } from "../lib/theme";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TokenModal } from "./settings/TokenModal";
 
 interface SettingsPageProps {
@@ -31,6 +32,8 @@ export function SettingsPage({
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState<GeneratedToken | null>(null);
+  const [tokenToDelete, setTokenToDelete] = useState<PublicToken | null>(null);
+  const [deletingToken, setDeletingToken] = useState(false);
 
   const loadTokens = useCallback(async (reportError = false): Promise<void> => {
     try {
@@ -70,6 +73,21 @@ export function SettingsPage({
       toast(error instanceof ApiError ? error.message : "Unable to generate token.");
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function removeToken(): Promise<void> {
+    if (!tokenToDelete) return;
+    setDeletingToken(true);
+    try {
+      await api.deleteToken(tokenToDelete.id);
+      setTokens((current) => current.filter((token) => token.id !== tokenToDelete.id));
+      setTokenToDelete(null);
+      toast("Token deleted.", "success");
+    } catch (error) {
+      toast(error instanceof ApiError ? error.message : "Unable to delete token.");
+    } finally {
+      setDeletingToken(false);
     }
   }
 
@@ -144,12 +162,23 @@ export function SettingsPage({
               {tokens.map((token) => (
                 <article key={token.id} className="token-row">
                   <div className="token-row-main">
-                    <span className="token-note">{token.note || "No note"}</span>
+                    <span className="token-note">{token.note || "No alias"}</span>
                     <code className="token-mask">{maskToken(token.prefix)}</code>
                   </div>
-                  <time className="token-date" dateTime={token.createdAt}>
-                    {formatTimestamp(token.createdAt)}
-                  </time>
+                  <div className="token-row-side">
+                    <time className="token-date" dateTime={token.createdAt}>
+                      {formatTimestamp(token.createdAt)}
+                    </time>
+                    <button
+                      type="button"
+                      className="icon-button icon-button-small token-delete"
+                      aria-label={`Delete token ${token.note || token.prefix}`}
+                      title="Delete token"
+                      onClick={() => setTokenToDelete(token)}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
@@ -159,6 +188,19 @@ export function SettingsPage({
 
       {generated ? (
         <TokenModal token={generated} onClose={(note) => void closeGenerated(note)} />
+      ) : null}
+
+      {tokenToDelete ? (
+        <ConfirmDialog
+          title="Delete token?"
+          description={`Future registrations with ${
+            tokenToDelete.note ? `"${tokenToDelete.note}"` : maskToken(tokenToDelete.prefix)
+          } will be rejected. Existing agents stay connected.`}
+          confirmLabel="Delete"
+          busy={deletingToken}
+          onConfirm={() => void removeToken()}
+          onCancel={() => setTokenToDelete(null)}
+        />
       ) : null}
     </div>
   );
