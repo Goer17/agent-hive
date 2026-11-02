@@ -13,8 +13,10 @@ Register this agent session with the Agent Hive server. The workspace defaults
 to the current directory. Credentials are written to
 <workspace>/.agent-hive/<session_id>/credentials.enc.
 
+Server URL:
+  Set HIVE_SERVER_URL in agent-hive-skill/.env (default: http://localhost:3000).
+
 Environment:
-  HIVE_SERVER_URL   Server URL (default: http://localhost:3000)
   HIVE_HOST         Host name reported to the server (default: hostname)
 EOF
 }
@@ -140,4 +142,3 @@ printf 'server=%s\n' "$server_url"
 printf '\nExport these values for subsequent commands:\n'
 printf '  export HIVE_SESSION_ID=%q\n' "$session_id"
 printf '  export HIVE_SESSION_PWD=%q\n' "$session_pwd"
-printf '  export HIVE_SERVER_URL=%q\n' "$server_url"

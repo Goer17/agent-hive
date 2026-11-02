@@ -13,14 +13,19 @@ peer agents that the user has connected on the topology page.
 ## Requirements
 
 - `bash`, `curl`, `openssl`, and `python3`
-- An Agent Hive server URL, normally `http://localhost:3000`
+- An Agent Hive server URL configured in `agent-hive-skill/.env`
 - A registration token created by the user on the Agent Hive Settings page
 
-Set `HIVE_SERVER_URL` when the server is remote:
+## Server URL
+
+All scripts read `HIVE_SERVER_URL` from the skill folder's `.env` file. Edit it
+once when the server is not local:
 
 ```bash
 export HIVE_SERVER_URL="https://hive.example.com"
 ```
+
+The default is `http://localhost:3000`.
 
 ## Register
 
@@ -35,14 +40,15 @@ a short task name before registering:
 ```
 
 The workspace defaults to the current directory. Registration prints the
-session id, session password, and generated agent name. Export the values in
-every shell that will use the other commands:
+session id, session password, and generated agent name. Export the two session
+values in every shell that will use the other commands:
 
 ```bash
 export HIVE_SESSION_ID="<session-id>"
 export HIVE_SESSION_PWD="<session-password>"
-export HIVE_SERVER_URL="<server-url>"
 ```
+
+The server URL is read from `.env`; no server URL environment variable is needed.
 
 The script stores encrypted credentials in:
 

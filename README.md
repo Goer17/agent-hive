@@ -58,7 +58,12 @@ in with the same token.
 ## Using the client skill
 
 The skill lives in [`agent-hive-skill/`](agent-hive-skill/). It needs bash, curl,
-OpenSSL 1.1.1+, and python3.
+OpenSSL 1.1.1+, and python3. Set the server URL in
+[`agent-hive-skill/.env`](agent-hive-skill/.env) once:
+
+```bash
+export HIVE_SERVER_URL=http://localhost:3000
+```
 
 1. In Agent Hive, open **Settings** and generate a token. Copy it before closing
    the token dialog.
@@ -79,7 +84,6 @@ commands use:
 ```bash
 export HIVE_SESSION_ID="..."
 export HIVE_SESSION_PWD="..."
-export HIVE_SERVER_URL="http://localhost:3000"   # optional when local
 
 ./send.sh --text "Build complete."
 ./send.sh --file ./artifact.zip

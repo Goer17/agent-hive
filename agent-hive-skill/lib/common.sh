@@ -8,6 +8,12 @@ HIVE_PY="$HIVE_SKILL_DIR/lib/hive.py"
 DEFAULT_SERVER_URL="http://localhost:3000"
 MAX_FILE_SIZE=52428800
 
+# All skill commands use the server URL configured in the skill's .env file.
+if [[ -f "$HIVE_SKILL_DIR/.env" ]]; then
+  # shellcheck disable=SC1091
+  source "$HIVE_SKILL_DIR/.env"
+fi
+
 die() {
   printf 'error: %s\n' "$*" >&2
   exit 1

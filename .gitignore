@@ -8,5 +8,6 @@ server/data/
 .env
 .env.*
 !.env.example
+!agent-hive-skill/.env
 __pycache__/
 *.pyc
