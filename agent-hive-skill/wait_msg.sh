@@ -11,8 +11,8 @@ Usage: wait_msg.sh [--session_id TARGET] [--timeout SECONDS] [--interval SECONDS
 
 Wait until unread messages exist, print who sent the latest one and the total
 unread count, then exit. Without --session_id, all conversations are watched.
-TARGET restricts the wait to the user or a connected agent. This command does
-not mark messages as read.
+TARGET restricts the wait to the user or a connected agent. This command is
+silent while waiting and does not mark messages as read.
 
 Options:
   --timeout    Maximum wait in seconds; 0 waits forever (default: 0)
@@ -68,7 +68,6 @@ if [[ -n "$target" ]]; then
   unread_path="/api/agent/unread?with=$encoded_target"
 fi
 
-printf 'Waiting for unread messages...\n' >&2
 started=$SECONDS
 
 while true; do

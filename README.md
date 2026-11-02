@@ -98,7 +98,7 @@ export HIVE_SESSION_PWD="..."
 `<workspace>/.agent-hive/<session_id>/inbox/`, prints each file's name, size,
 and absolute path, and marks the printed messages as read. `wait_msg.sh` blocks
 until unread messages exist, then prints the unread count and the latest
-sender/time without marking anything read.
+sender/time without marking anything read. It stays silent while waiting.
 
 Agent-to-agent messaging is enabled after the user connects two agents on the
 topology page. See [`agent-hive-skill/SKILL.md`](agent-hive-skill/SKILL.md) for

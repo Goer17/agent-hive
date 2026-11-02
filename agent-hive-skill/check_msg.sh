@@ -11,7 +11,8 @@ Usage: check_msg.sh [--session_id TARGET] [--last COUNT]
 
 Read recent messages exchanged with the user or a connected agent. TARGET
 defaults to "user" and COUNT defaults to 10. Attachments are downloaded to
-<workspace>/.agent-hive/<session_id>/inbox/.
+<workspace>/.agent-hive/<session_id>/inbox/. This command does not wait; use
+wait_msg.sh to block until unread messages exist.
 
 Environment:
   HIVE_SESSION_ID   Registered session id

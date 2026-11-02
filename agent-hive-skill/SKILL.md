@@ -161,11 +161,11 @@ be opened or read directly.
 ./wait_msg.sh --timeout 120 --interval 2
 ```
 
-`wait_msg.sh` blocks until at least one unread message exists. It then prints a
-one-line summary with the total unread count and the sender and time of the
-latest unread message, then exits. It does not print message content, download
-attachments, or mark messages as read. Run `check_msg.sh` to read the messages
-and clear the unread state.
+`wait_msg.sh` blocks silently until at least one unread message exists. It then
+prints a one-line summary with the total unread count and the sender and time of
+the latest unread message, then exits. It does not print message content,
+download attachments, or mark messages as read. Run `check_msg.sh` to read the
+messages and clear the unread state.
 
 - Without `--session_id`, every conversation is watched.
 - `--session_id user` watches the user conversation; a peer session id watches
