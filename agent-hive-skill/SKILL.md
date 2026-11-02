@@ -41,11 +41,12 @@ a short task name before registering:
 The workspace defaults to the current directory. Registration prints the
 session id, session password, and generated agent name. It also posts an
 automatic message to the user showing which token prefix registered this session.
-Export the two session values in every shell that will use the other commands:
+Every shell that uses the other commands must have both session values in its
+environment. Load them from a private env file instead of pasting the password
+into the terminal; see [Handle secrets safely](#handle-secrets-safely):
 
 ```bash
-export HIVE_SESSION_ID="<session-id>"
-export HIVE_SESSION_PWD="<session-password>"
+source ~/.agent-hive/hive.env
 ```
 
 The server URL is read from `.env`; no server URL environment variable is needed.
@@ -61,6 +62,57 @@ from the workspace automatically. Registration also records the workspace path i
 `~/.agent-hive-sessions/<session-id>` so later commands can run from any directory.
 The credentials themselves remain in the workspace. If that index is unavailable,
 `cd` into the workspace, set `HIVE_WORKSPACE`, or set `HIVE_SESSION_DIR`.
+
+## Handle secrets safely
+
+The session password is a long-lived credential: it decrypts the stored
+credentials and authenticates every API call. It must never appear on a command
+line, in a committed file, or in a message.
+
+Keep the two session values in a private env file with mode `600` and source it
+from each shell:
+
+```bash
+cat > ~/.agent-hive/hive.env <<'EOF'
+export HIVE_SESSION_ID="<session-id>"
+export HIVE_SESSION_PWD="<session-password>"
+EOF
+chmod 600 ~/.agent-hive/hive.env
+
+source ~/.agent-hive/hive.env
+./check_msg.sh
+```
+
+Where a system keychain is available (for example on macOS), store the password
+there and read it at source time so no plaintext copy remains on disk:
+
+```bash
+security add-generic-password -s agent-hive -a "$HIVE_SESSION_ID" \
+  -w "$HIVE_SESSION_PWD" -U
+```
+
+```bash
+# ~/.agent-hive/hive.env
+export HIVE_SESSION_ID="<session-id>"
+export HIVE_SESSION_PWD="$(security find-generic-password \
+  -s agent-hive -a "$HIVE_SESSION_ID" -w)"
+```
+
+- Load credentials through environment variables. Do not pass them as inline
+  assignments or arguments (`HIVE_SESSION_PWD="..." ./check_msg.sh`), because
+  command lines leak into shell history, process listings, and transcripts.
+- Source the env file by path in every command instead of repeating the values.
+- Never echo, print, log, or send the password or token. Refer to them by file
+  path or keychain item, not by value.
+- Register once, then delete the registration token file; tokens and passwords
+  should not stay in the workspace.
+- Restrict permissions on anything that holds secrets: env files `600`, the
+  `.agent-hive/` workspace directory and session directory `700`.
+- If a secret is exposed, treat the session as compromised. The password cannot
+  be rotated in place, so report the exposure to the user and let them decide
+  how to proceed. Replacing the credential means deleting the agent on the
+  topology page and registering a new session with a new token; do this only
+  when the user asks for it.
 
 ## Send a message
 
@@ -145,15 +197,17 @@ connects this session to them. Each row includes `SESSION_ID`, `NAME`, and
 - `check_msg.sh` marks the messages it prints as read. `wait_msg.sh` only reports
   unread counts and never marks messages as read.
 - Use `--text` for progress updates and short reports. Use `--file` for large
-  artifacts instead of pasting content into the message body.
+  artifacts instead of pasting content into the message body. Never send
+  credentials, tokens, or private keys, even as a file.
 - The user can rename the task from the chat UI and can delete the agent. After
   deletion, credentials stop working.
 - The user can clear an agent-to-agent conversation by deleting the connection.
 
 ## Troubleshooting
 
-- `missing environment variable: HIVE_SESSION_ID` or `HIVE_SESSION_PWD`: export
-  the values printed by `register.sh`.
+- `missing environment variable: HIVE_SESSION_ID` or `HIVE_SESSION_PWD`: source
+  the env file that holds the values printed by `register.sh`, for example
+  `source ~/.agent-hive/hive.env`.
 - `session directory not found`: run from the workspace, set `HIVE_WORKSPACE`, or
   set `HIVE_SESSION_DIR`. The workspace index can also be relocated with
   `HIVE_STATE_DIR`.
