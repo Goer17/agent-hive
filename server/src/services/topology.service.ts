@@ -99,15 +99,19 @@ export function deleteEdge(edgeId: string): EdgeRecord {
 export function updatePositions(
   positions: Record<string, { x: number; y: number }>,
 ): void {
-  for (const [agentId, position] of Object.entries(positions)) {
+  const updates = Object.entries(positions).map(([agentId, position]) => {
     const agent = requireAgent(agentId);
     if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
       conflict("Invalid node position.");
     }
-    agent.graph = {
+    return {
+      agent,
       x: Math.round(Math.min(5000, Math.max(-2000, position.x))),
       y: Math.round(Math.min(5000, Math.max(-2000, position.y))),
     };
+  });
+  for (const update of updates) {
+    update.agent.graph = { x: update.x, y: update.y };
   }
   store.save();
 }

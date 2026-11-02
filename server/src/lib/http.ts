@@ -28,6 +28,10 @@ export function unauthorized(message = "Authentication required."): never {
   throw new HttpError(401, message);
 }
 
+export function queryString(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
 export function clampInt(
   value: string | undefined,
   fallback: number,

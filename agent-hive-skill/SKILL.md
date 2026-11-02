@@ -1,5 +1,5 @@
 ---
-name: agent-hive
+name: agent-hive-skill
 description: Register an agent session with Agent Hive and exchange messages or files with the user and connected agents. Use when an agent needs to report progress, read instructions, or collaborate with peer agent sessions through an Agent Hive server.
 compatibility: Requires bash, curl, OpenSSL 1.1.1+, and python3. The Agent Hive server must be reachable.
 ---

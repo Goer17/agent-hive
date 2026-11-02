@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import {
   Ellipsis,
+  Loader2,
   Mail,
   Paperclip,
   Pin,
@@ -13,6 +14,7 @@ import { formatListTime, previewText } from "../../lib/format";
 
 interface ChatListProps {
   agents: Agent[];
+  loading: boolean;
   selectedId: string | null;
   onSelect: (agent: Agent) => void;
   onTogglePin: (agent: Agent) => void;
@@ -22,6 +24,7 @@ interface ChatListProps {
 
 export function ChatList({
   agents,
+  loading,
   selectedId,
   onSelect,
   onTogglePin,
@@ -62,7 +65,12 @@ export function ChatList({
         </div>
       </header>
       <div className="chat-list">
-        {agents.length === 0 ? (
+        {loading && agents.length === 0 ? (
+          <div className="list-loading">
+            <Loader2 size={16} className="spin" />
+          </div>
+        ) : null}
+        {!loading && agents.length === 0 ? (
           <p className="empty-note">No agents yet.</p>
         ) : null}
         {displayAgents.map((agent) => {

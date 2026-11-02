@@ -158,21 +158,3 @@ assert_contact() {
     die "contact not found: $target"
   fi
 }
-
-show_help() {
-  cat <<'EOF'
-Agent Hive skill commands:
-  register.sh --token TOKEN --workspace PATH --task TASK
-  send.sh --session_id TARGET --text TEXT --file PATH
-  check_msg.sh --session_id TARGET --last COUNT
-  list_contacts.sh
-
-Required environment for all commands except register:
-  HIVE_SESSION_ID
-  HIVE_SESSION_PWD
-
-Optional:
-  HIVE_SERVER_URL   (default: value saved at registration)
-  HIVE_WORKSPACE    (workspace used to locate .agent-hive/<session_id>)
-EOF
-}

@@ -42,7 +42,10 @@ export function normalizeFileName(input: string): string {
   // multer/busboy can expose UTF-8 names as latin1.
   const decoded = Buffer.from(input, "latin1").toString("utf8");
   if (!decoded.includes("\uFFFD")) name = decoded;
-  name = path.basename(name).replace(/[\r\n\t]/g, " ").trim();
+  name = path.posix
+    .basename(name.replace(/\\/g, "/"))
+    .replace(/[\x00-\x1f\x7f]/g, " ")
+    .trim();
   if (!name) name = "file";
   return name.slice(0, 255);
 }

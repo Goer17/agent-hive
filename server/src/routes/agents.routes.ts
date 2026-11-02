@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { clampInt } from "../lib/http.js";
+import { clampInt, queryString } from "../lib/http.js";
 import { events } from "../lib/events.js";
 import { discardUpload, fileFromRequest } from "../lib/uploads.js";
 import { store } from "../store/store.js";
@@ -68,8 +68,8 @@ agentsRouter.delete("/:id", (request, response) => {
 
 agentsRouter.get("/:id/messages", (request, response) => {
   const agent = requireAgent(request.params.id);
-  const limit = clampInt(request.query.limit as string | undefined, 100, 1, 200);
-  const before = (request.query.before as string | undefined) || undefined;
+  const limit = clampInt(queryString(request.query.limit), 100, 1, 200);
+  const before = queryString(request.query.before) || undefined;
   const result = listUserConversation(agent.sessionId, limit, before);
   response.json({ messages: result.messages, hasMore: result.hasMore });
 });

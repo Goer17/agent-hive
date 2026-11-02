@@ -17,6 +17,7 @@ function sortAgents(agents: Agent[]): Agent[] {
 export function ChatPage(): React.JSX.Element {
   const isMobile = useMediaQuery("(max-width: 820px)");
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [agentsLoaded, setAgentsLoaded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadedAgentId, setLoadedAgentId] = useState<string | null>(null);
@@ -45,6 +46,8 @@ export function ChatPage(): React.JSX.Element {
       if (reportError) {
         toast(error instanceof ApiError ? error.message : "Unable to load agents.");
       }
+    } finally {
+      setAgentsLoaded(true);
     }
   }, []);
 
@@ -233,6 +236,7 @@ export function ChatPage(): React.JSX.Element {
     <div className={`chat-page${selectedId ? " has-selection" : ""}`}>
       <ChatList
         agents={agents}
+        loading={!agentsLoaded}
         selectedId={selectedId}
         onSelect={(agent) => {
           if (agent.sessionId !== selectedId) setSelectedId(agent.sessionId);

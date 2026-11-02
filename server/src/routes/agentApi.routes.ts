@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { clampInt, HttpError } from "../lib/http.js";
+import { clampInt, HttpError, queryString } from "../lib/http.js";
 import { events } from "../lib/events.js";
 import { sendStoredFile } from "../lib/files.js";
 import { discardUpload, fileFromRequest } from "../lib/uploads.js";
@@ -101,8 +101,8 @@ function agentMessagePayload(message: MessageRecord): Record<string, unknown> {
 
 agentApiRouter.get("/messages", (request, response) => {
   const agent = (request as AgentRequest).agent;
-  const target = ((request.query.with as string | undefined) ?? "user").trim() || "user";
-  const last = clampInt(request.query.last as string | undefined, 10, 1, 200);
+  const target = (queryString(request.query.with) ?? "user").trim() || "user";
+  const last = clampInt(queryString(request.query.last), 10, 1, 200);
   const resolved = agentConversationTarget(agent, target);
   const messages = listAgentConversation(agent.sessionId, target, last);
 
@@ -181,5 +181,5 @@ agentApiRouter.get("/files/:id", (request, response) => {
     response.status(404).json({ error: "File not found." });
     return;
   }
-  sendStoredFile(response, found.file, { download: request.query.download === "1" });
+  sendStoredFile(response, found.file, { download: queryString(request.query.download) === "1" });
 });

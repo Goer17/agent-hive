@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, X } from "lucide-react";
-import { TOAST_EVENT, type ToastDetail, type ToastTone } from "../lib/toast";
+import { TOAST_EVENT, type ToastDetail } from "../lib/toast";
 
 interface ToastItem extends ToastDetail {
   id: number;
@@ -24,8 +24,7 @@ export function ToastHost(): React.JSX.Element {
     return () => window.removeEventListener(TOAST_EVENT, listener);
   }, []);
 
-  function dismiss(id: number, tone: ToastTone): void {
-    void tone;
+  function dismiss(id: number): void {
     setItems((current) => current.filter((entry) => entry.id !== id));
   }
 
@@ -43,7 +42,7 @@ export function ToastHost(): React.JSX.Element {
             type="button"
             className="toast-close"
             aria-label="Dismiss"
-            onClick={() => dismiss(item.id, item.tone)}
+            onClick={() => dismiss(item.id)}
           >
             <X size={13} />
           </button>

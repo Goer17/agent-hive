@@ -42,13 +42,17 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps): React.J
     const onKeyDown = (event: KeyboardEvent): void => {
       if (event.key === "Escape") closeRef.current();
     };
+    const onBlur = (): void => closeRef.current();
+    const onResize = (): void => closeRef.current();
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("keydown", onKeyDown);
-    window.addEventListener("blur", () => closeRef.current(), { once: true });
-    window.addEventListener("resize", () => closeRef.current(), { once: true });
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("resize", onResize);
     return () => {
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 

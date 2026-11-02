@@ -586,6 +586,14 @@ a {
   overflow-y: auto;
 }
 
+.list-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  color: var(--muted);
+}
+
 .chat-row {
   position: relative;
   display: flex;
@@ -1329,6 +1337,7 @@ a {
 
 .agent-field dd {
   margin: 0;
+  overflow-wrap: anywhere;
   color: var(--text);
   font-size: 10.5px;
   line-height: 1.6;

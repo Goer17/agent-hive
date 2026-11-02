@@ -118,7 +118,7 @@ def cmd_render_contacts() -> None:
 def safe_file_name(name: str) -> str:
     cleaned = Path(name.replace("\\", "/")).name
     cleaned = re.sub(r"[^A-Za-z0-9._ -]", "_", cleaned).strip()
-    return cleaned or "file"
+    return (cleaned or "file")[:180]
 
 
 def download_file(file: dict, inbox: Path, server_url: str) -> str:

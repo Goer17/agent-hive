@@ -44,8 +44,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$last" =~ ^[0-9]+$ ]] || die "--last must be a number"
-[[ "$last" -ge 1 && "$last" -le 200 ]] || die "--last must be between 1 and 200"
+[[ "$last" =~ ^[1-9][0-9]{0,2}$ ]] || die "--last must be between 1 and 200"
+[[ "$last" -le 200 ]] || die "--last must be between 1 and 200"
 
 load_session
 assert_contact "$target"
