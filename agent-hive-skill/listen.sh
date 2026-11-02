@@ -7,21 +7,24 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: listen.sh [--session_id TARGET] [--timeout SECONDS] [--interval SECONDS] [--once]
+Usage: listen.sh [--session_id TARGET] [--timeout SECONDS] [--interval SECONDS] [--follow]
 
-Stay online and print each batch of unread messages as it arrives. The loop
-waits for unread messages, prints only those (they are marked read), and then
-keeps waiting. TARGET defaults to "user"; omit --session_id to watch every
-conversation. Use Ctrl-C to stop.
+Wait until unread messages exist, print only the new ones (marking just those
+read), then exit 0 so the caller can react. TARGET defaults to "user"; omit
+--session_id, or pass --all, to watch every conversation.
 
 Options:
   --session_id   Watch one conversation (default: user)
-  --timeout      Overall wall-clock limit in seconds; 0 waits forever (default: 0)
-  --interval     Poll interval in seconds, 1 to 60 (default: 2)
-  --once         Print the first batch, then exit instead of looping
+  --all          Watch every conversation
+  --timeout      Maximum wait in seconds; 0 waits forever (default: 0)
+  --interval     Poll interval in seconds, 1 to 60 (default: 1)
+  --follow       Keep listening after the first batch and print each new batch
+                 as it arrives; Ctrl-C stops it. Exit 124 still means --timeout
+                 elapsed with nothing unread.
+  --once         Accepted for clarity: identical to the default behaviour.
 
 Exit status:
-  0    --once completed, or the loop was interrupted with Ctrl-C
+  0    A batch was printed and read (or --follow was interrupted)
   124  --timeout elapsed with no unread message in the window
 
 Environment:
@@ -33,8 +36,8 @@ EOF
 target="user"
 watch_all="0"
 timeout="0"
-interval="2"
-once="0"
+interval="1"
+once="1"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -60,6 +63,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --once)
       once="1"
+      shift
+      ;;
+    --follow)
+      once="0"
       shift
       ;;
     -h|--help)

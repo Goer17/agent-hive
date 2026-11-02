@@ -190,26 +190,27 @@ messages and clear the unread state. It exits `0` when messages are waiting and
 - `--timeout` is the maximum wait in seconds; `0` (the default) waits forever.
 - `--interval` is the polling interval in seconds, from 1 to 60; the default is 2.
 
-## Stay online
+## Listen for the next batch
 
-`listen.sh` is the loop most long-lived sessions want: wait for unread messages,
-print only the new ones (marking just those read), then wait again. It is silent
-between batches and safe to leave running for hours.
+`listen.sh` is `wait_msg.sh` plus reading: it blocks until unread messages exist,
+prints only those (marking just them read), then **exits `0`** so the caller can
+act on them. That is the natural tool-call shape: run it, handle the message,
+run it again.
 
 ```bash
-./listen.sh
+./listen.sh                      # wait for the next batch, print it, exit
 ./listen.sh --session_id "<peer-session-id>"
-./listen.sh --timeout 900      # exit 124 if nothing arrives within 15 minutes
-./listen.sh --once             # print the first batch, then exit
+./listen.sh --timeout 900        # give up after 15 minutes (exit 124)
+./listen.sh --follow             # keep listening and print every batch
 ```
 
-- `--timeout` bounds the whole run, not a single poll; `0` (the default) waits
-  forever and only Ctrl-C or a signal stops it.
-- `--interval` controls how often the server is asked (default 2s).
-- Omit `--session_id` to watch every conversation; add `--all` to say so
-  explicitly.
-- Exit status is `0` after `--once` or an interrupt, and `124` when the overall
-  `--timeout` elapses with nothing unread.
+- Default is one batch per call. `--follow` keeps looping; Ctrl-C stops it and
+  `--timeout` then bounds the whole run instead of one wait.
+- `--interval` controls how often the server is asked (default 1s).
+- Omit `--session_id` to watch every conversation; `--all` says so explicitly.
+- Exit status is `0` when a batch was printed (or `--follow` was interrupted)
+  and `124` when `--timeout` elapsed with nothing unread.
+- `--once` is accepted and does nothing extra; it documents the default.
 
 ## List contacts
 

@@ -99,7 +99,7 @@ export HIVE_SESSION_PWD="..."
 ./check_msg.sh --session_id user --last 10
 ./check_msg.sh --unread-only
 ./wait_msg.sh --timeout 120
-./listen.sh --timeout 900
+./listen.sh --timeout 900        # one batch, then exit; --follow keeps watching
 ./list_contacts.sh
 ```
 
@@ -109,9 +109,10 @@ and absolute path, and marks the printed messages as read; `--unread-only` limit
 that to messages that are still unread. `wait_msg.sh` blocks until unread messages
 exist, then prints the unread count and the latest sender/time without marking
 anything read. It stays silent while waiting and exits `124` when `--timeout`
-elapses first. `listen.sh` is the continuous version: it waits, prints only the
-new messages, and keeps watching until it is interrupted or its `--timeout`
-expires.
+elapses first. `listen.sh` adds the read step: it waits for unread messages,
+prints only the new ones, marks them read, and exits `0` so the caller can react;
+add `--follow` to keep looping and print every batch until it is interrupted or
+its `--timeout` expires.
 
 Agent-to-agent messaging is enabled after the user connects two agents on the
 topology page. See [`agent-hive-skill/SKILL.md`](agent-hive-skill/SKILL.md) for
@@ -159,7 +160,8 @@ the complete skill contract.
   to unread messages)
 - `wait_msg.sh` reports only unread count and the latest sender/time, and exits
   `124` on timeout
-- `listen.sh` keeps the session online and prints each new batch as it arrives
+- `listen.sh` returns the next unread batch and marks it read (`--follow` keeps
+  looping instead of exiting)
 - The web UI shows `Read` / `Unread` on sent messages and in edge conversations
 
 ## Project layout
