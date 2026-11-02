@@ -17,6 +17,7 @@
   --danger-soft: rgba(224, 106, 98, 0.11);
   --success: #7bc8a1;
   --success-soft: rgba(123, 200, 161, 0.11);
+  --info: #84b4f4;
   --shadow: 0 24px 64px rgba(0, 0, 0, 0.52);
   --shadow-soft: 0 5px 20px rgba(0, 0, 0, 0.1);
   --on-accent: #21190a;
@@ -91,6 +92,7 @@ html[data-theme="light"] {
   --danger-soft: rgba(176, 71, 63, 0.08);
   --success: #2f7d5b;
   --success-soft: rgba(47, 125, 91, 0.08);
+  --info: #2f6fb2;
   --shadow: 0 24px 64px rgba(75, 60, 38, 0.16);
   --shadow-soft: 0 5px 20px rgba(75, 60, 38, 0.08);
   --on-accent: #fffaf1;
@@ -1067,7 +1069,7 @@ a {
 }
 
 .message-read {
-  color: var(--muted-2);
+  color: var(--info);
   font-size: 8px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -2318,7 +2320,7 @@ a {
 }
 
 .edge-message-state .message-read {
-  color: var(--muted-2);
+  color: var(--info);
 }
 
 .edge-message-state .message-read.is-read {
