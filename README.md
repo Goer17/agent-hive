@@ -39,6 +39,8 @@ npm start
 ```
 
 The server then serves the built app from `http://localhost:3000`.
+For phone access on the same network, use the server's printed `network` URL
+with the production build, or the Vite `Network` URL (port 5173) while developing.
 
 Environment variables:
 
