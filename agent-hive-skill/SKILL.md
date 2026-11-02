@@ -40,7 +40,7 @@ a short task name before registering:
 
 The workspace defaults to the current directory. Registration prints the
 session id, session password, and generated agent name. It also posts an
-automatic message to the user showing which token alias registered this session.
+automatic message to the user showing which token prefix registered this session.
 Export the two session values in every shell that will use the other commands:
 
 ```bash

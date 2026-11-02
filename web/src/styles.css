@@ -2091,6 +2091,22 @@ a {
   border-color: var(--border-strong);
 }
 
+.graph-hint {
+  position: absolute;
+  bottom: 13px;
+  left: 14px;
+  z-index: 7;
+  color: var(--muted-2);
+  font-size: 8.5px;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  transition: color 0.15s ease;
+}
+
+.graph-hint.is-active {
+  color: var(--accent);
+}
+
 .graph-empty {
   position: absolute;
   top: 50%;

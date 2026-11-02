@@ -48,11 +48,7 @@ agentApiRouter.post("/register", async (request, response) => {
     task: body.task,
   });
 
-  const tokenAlias = tokenRecord.note.trim();
-  const tokenLabel = `${tokenRecord.prefix}-***`;
-  const text = tokenAlias
-    ? `Registered using token alias: ${tokenAlias} (${tokenLabel}).`
-    : `Registered using token ${tokenLabel} (no alias).`;
+  const text = `Registered using token ${tokenRecord.prefix}-***.`;
   const registrationMessage = createMessage({
     conversation: userConversation(agent.sessionId),
     from: {

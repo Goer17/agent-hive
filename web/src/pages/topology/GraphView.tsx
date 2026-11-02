@@ -28,6 +28,7 @@ interface Point {
 
 const MIN_ZOOM = 0.35;
 const MAX_ZOOM = 2.2;
+const DOUBLE_CLICK_MS = 500;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -55,6 +56,7 @@ export function GraphView({
   const [cursor, setCursor] = useState<Point | null>(null);
   const hasFittedRef = useRef(false);
   const draggingNodeRef = useRef(false);
+  const lastNodeClickRef = useRef<{ agentId: string; at: number } | null>(null);
 
   const positionsRef = useRef(positions);
   positionsRef.current = positions;
@@ -149,7 +151,10 @@ export function GraphView({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") setPendingSourceId(null);
+      if (event.key === "Escape") {
+        setPendingSourceId(null);
+        lastNodeClickRef.current = null;
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -179,7 +184,10 @@ export function GraphView({
     const onUp = (): void => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      if (!moved) setPendingSourceId(null);
+      if (!moved) {
+        setPendingSourceId(null);
+        lastNodeClickRef.current = null;
+      }
     };
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
@@ -223,21 +231,39 @@ export function GraphView({
       setPositions((current) => ({ ...current, [agent.sessionId]: latest }));
     };
 
-    const onUp = (): void => {
+    const cleanup = (): void => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("pointercancel", onCancel);
       draggingNodeRef.current = false;
+    };
+
+    const onUp = (): void => {
+      cleanup();
       if (moved) {
+        lastNodeClickRef.current = null;
         onPositionsChange({ [agent.sessionId]: latest });
-      } else {
-        activateNode(agent);
+        return;
       }
+
+      const now = Date.now();
+      const last = lastNodeClickRef.current;
+      if (last && last.agentId === agent.sessionId && now - last.at <= DOUBLE_CLICK_MS) {
+        lastNodeClickRef.current = null;
+        activateNode(agent);
+      } else {
+        lastNodeClickRef.current = { agentId: agent.sessionId, at: now };
+      }
+    };
+
+    const onCancel = (): void => {
+      cleanup();
+      lastNodeClickRef.current = null;
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
+    window.addEventListener("pointercancel", onCancel);
   }
 
   function changeZoom(factor: number): void {
@@ -255,6 +281,9 @@ export function GraphView({
 
   const hoveredAgent = agents.find((agent) => agent.sessionId === hoveredAgentId) ?? null;
   const hoveredPosition = hoveredAgent ? positions[hoveredAgent.sessionId] : null;
+  const pendingAgent = pendingSourceId
+    ? agents.find((agent) => agent.sessionId === pendingSourceId) ?? null
+    : null;
   const pendingPosition = pendingSourceId ? positions[pendingSourceId] : null;
 
   const tooltipStyle = (() => {
@@ -283,6 +312,7 @@ export function GraphView({
           event.preventDefault();
           event.stopPropagation();
           setPendingSourceId(null);
+          lastNodeClickRef.current = null;
         }
       }}
       onContextMenu={(event) => event.preventDefault()}
@@ -333,6 +363,7 @@ export function GraphView({
                       event.stopPropagation();
                       if (pendingSourceRef.current) {
                         setPendingSourceId(null);
+                        lastNodeClickRef.current = null;
                         return;
                       }
                       onEdgeClick(edge);
@@ -382,6 +413,7 @@ export function GraphView({
                   event.preventDefault();
                   event.stopPropagation();
                   setPendingSourceId(null);
+                  lastNodeClickRef.current = null;
                 }}
               >
                 <circle r="48" fill="transparent" />
@@ -451,6 +483,12 @@ export function GraphView({
         <button type="button" className="graph-control" onClick={() => changeZoom(1 / 1.2)} title="Zoom out" aria-label="Zoom out">
           <Minus size={15} />
         </button>
+      </div>
+
+      <div className={`graph-hint${pendingSourceId ? " is-active" : ""}`} aria-live="polite">
+        {pendingSourceId
+          ? `Double-click another agent to connect to ${pendingAgent?.name ?? "this agent"}. Esc cancels.`
+          : "Double-click two agents to connect."}
       </div>
     </div>
   );

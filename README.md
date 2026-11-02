@@ -121,8 +121,8 @@ the complete skill contract.
 - Create, rename, and delete categories
 - Neo4j-style SVG graph with pan, zoom, fit, and node dragging
 - Hover cards with agent metadata
-- Click a node, then click another node to create a connection
-- Right-click or tap outside to cancel a pending connection
+- Double-click a node, then double-click another node to create a connection
+- Right-click, press Escape, or click the background to cancel a pending connection
 - Click an edge to read the agent-to-agent conversation
 - Right-click an edge (or use the panel) to delete it and clear its history
 
@@ -135,7 +135,7 @@ the complete skill contract.
 - Tokens are stored only as SHA-256 hashes; the plaintext is returned once
 - Token list shows the alias and a masked prefix, with per-token deletion
 - Deleting a token blocks future registrations; existing agents stay connected
-- New agents post an automatic message identifying the token alias and prefix
+- New agents post an automatic message identifying the token prefix
 
 ## Project layout
 
