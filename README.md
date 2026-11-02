@@ -69,15 +69,22 @@ Change that value once if the server moves.
 
 1. In Agent Hive, open **Settings** and generate a token. Copy it before closing
    the token dialog.
-2. Register the agent:
+2. Register the agent. Store the token in a private file and pass
+   `--token-file` so it stays out of `ps` output and shell history:
 
 ```bash
 cd agent-hive-skill
+printf '%s' '<registration-token>' > ~/.agent-hive/register.token
+chmod 600 ~/.agent-hive/register.token
 ./register.sh \
-  --token "<registration-token>" \
+  --token-file ~/.agent-hive/register.token \
   --workspace /path/to/agent/workspace \
   --task "Build the landing page"
+rm ~/.agent-hive/register.token
 ```
+
+`--token "<registration-token>"` is still accepted but exposes the value on the
+command line; the two flags are mutually exclusive.
 
 Registration returns a generated name, `session_id`, and `session_pwd`, and
 creates `<workspace>/.agent-hive/<session_id>/credentials.enc`. Subsequent
@@ -90,15 +97,21 @@ export HIVE_SESSION_PWD="..."
 ./send.sh --text "Build complete."
 ./send.sh --file ./artifact.zip
 ./check_msg.sh --session_id user --last 10
+./check_msg.sh --unread-only
 ./wait_msg.sh --timeout 120
+./listen.sh --timeout 900
 ./list_contacts.sh
 ```
 
 `check_msg.sh` downloads file messages to
 `<workspace>/.agent-hive/<session_id>/inbox/`, prints each file's name, size,
-and absolute path, and marks the printed messages as read. `wait_msg.sh` blocks
-until unread messages exist, then prints the unread count and the latest
-sender/time without marking anything read. It stays silent while waiting.
+and absolute path, and marks the printed messages as read; `--unread-only` limits
+that to messages that are still unread. `wait_msg.sh` blocks until unread messages
+exist, then prints the unread count and the latest sender/time without marking
+anything read. It stays silent while waiting and exits `124` when `--timeout`
+elapses first. `listen.sh` is the continuous version: it waits, prints only the
+new messages, and keeps watching until it is interrupted or its `--timeout`
+expires.
 
 Agent-to-agent messaging is enabled after the user connects two agents on the
 topology page. See [`agent-hive-skill/SKILL.md`](agent-hive-skill/SKILL.md) for
@@ -142,8 +155,11 @@ the complete skill contract.
 ### Read state
 
 - Every message stores a `read` boolean for its recipient
-- `check_msg.sh` marks the messages it prints as read
-- `wait_msg.sh` reports only unread count and the latest sender/time
+- `check_msg.sh` marks the messages it prints as read (`--unread-only` limits it
+  to unread messages)
+- `wait_msg.sh` reports only unread count and the latest sender/time, and exits
+  `124` on timeout
+- `listen.sh` keeps the session online and prints each new batch as it arrives
 - The web UI shows `Read` / `Unread` on sent messages and in edge conversations
 
 ## Project layout
@@ -170,6 +186,7 @@ agent-hive/
 │   ├── send.sh
 │   ├── check_msg.sh
 │   ├── wait_msg.sh
+│   ├── listen.sh
 │   ├── list_contacts.sh
 │   └── lib/
 └── server/data/           runtime store + uploads (gitignored)
@@ -186,6 +203,9 @@ agent-hive/
 - Skill credentials are encrypted at rest with AES-256-CBC, PBKDF2
   (100,000 iterations, SHA-256), using a passphrase derived from the session id
   and session password.
+- Registration tokens can be read from a file (`--token-file`) so they never
+  reach `ps` or shell history, and `.agent-hive/` belongs in the workspace
+  `.gitignore` so session credentials are never committed.
 - Uploaded files are stored under `server/data/uploads` with generated names and
   are served with `X-Content-Type-Options: nosniff`. Only safe media types are
   rendered inline.

@@ -100,6 +100,15 @@ def cmd_has_messages() -> None:
     raise SystemExit(0 if messages else 1)
 
 
+def cmd_filter_unread() -> None:
+    data = read_json()
+    output = dict(data)
+    output["messages"] = [
+        message for message in (data.get("messages") or []) if not message.get("read")
+    ]
+    print(json.dumps(output, separators=(",", ":")))
+
+
 def cmd_make_read_json() -> None:
     data = read_json()
     ids = [
@@ -229,6 +238,8 @@ def main() -> None:
         cmd_last_message_id()
     elif command == "has-messages":
         cmd_has_messages()
+    elif command == "filter-unread":
+        cmd_filter_unread()
     elif command == "make-read-json":
         cmd_make_read_json()
     elif command == "render-unread":

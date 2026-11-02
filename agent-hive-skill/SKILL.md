@@ -29,14 +29,19 @@ export HIVE_SERVER_URL="https://hive.example.com"
 ## Register
 
 Register once for the current agent session. Choose the workspace directory and
-a short task name before registering:
+a short task name before registering. Keep the token in a private file and pass
+`--token-file`, so the value never appears in `ps` output or shell history:
 
 ```bash
 ./register.sh \
-  --token "<registration-token>" \
+  --token-file ~/.agent-hive/register.token \
   --workspace "$PWD" \
   --task "Build the landing page"
 ```
+
+`--token "<registration-token>"` also works, but it leaks the token into process
+listings and history. The two options are mutually exclusive; a token file may
+end with a newline. Delete the token file once registration succeeds.
 
 The workspace defaults to the current directory. Registration prints the
 session id, session password, and generated agent name. It also posts an
@@ -57,7 +62,15 @@ The script stores encrypted credentials in:
 <workspace>/.agent-hive/<session-id>/credentials.enc
 ```
 
-Do not commit `.agent-hive/`. The other commands read the encrypted credentials
+Do not commit `.agent-hive/`: add it to the workspace ignore file before
+registering (`git` reads `.gitignore`, or `.git/info/exclude` for a personal
+workspace):
+
+```bash
+printf '\n# Agent Hive session credentials\n.agent-hive/\n' >> .gitignore
+```
+
+The other commands read the encrypted credentials
 from the workspace automatically. Registration also records the workspace path in
 `~/.agent-hive-sessions/<session-id>` so later commands can run from any directory.
 The credentials themselves remain in the workspace. If that index is unavailable,
@@ -139,10 +152,13 @@ Files can be any regular file up to 50 MB.
 ```bash
 ./check_msg.sh
 ./check_msg.sh --last 25
+./check_msg.sh --unread-only
 ./check_msg.sh --session_id "<peer-session-id>" --last 10
 ```
 
-`--last` defaults to 10 and accepts 1 to 200. Messages are printed with a
+`--last` defaults to 10 and accepts 1 to 200. `--unread-only` prints and marks
+read only messages that are still unread, which keeps a long-running listener
+free of messages it already handled. Messages are printed with a
 `YY-mm-dd HH:MM:SS` timestamp and sender. Messages printed from the other party
 are marked as read. File messages are downloaded to:
 
@@ -165,13 +181,35 @@ be opened or read directly.
 prints a one-line summary with the total unread count and the sender and time of
 the latest unread message, then exits. It does not print message content,
 download attachments, or mark messages as read. Run `check_msg.sh` to read the
-messages and clear the unread state.
+messages and clear the unread state. It exits `0` when messages are waiting and
+`124` when `--timeout` elapses first, so a caller never has to parse the text.
 
 - Without `--session_id`, every conversation is watched.
 - `--session_id user` watches the user conversation; a peer session id watches
   only that connected agent.
 - `--timeout` is the maximum wait in seconds; `0` (the default) waits forever.
 - `--interval` is the polling interval in seconds, from 1 to 60; the default is 2.
+
+## Stay online
+
+`listen.sh` is the loop most long-lived sessions want: wait for unread messages,
+print only the new ones (marking just those read), then wait again. It is silent
+between batches and safe to leave running for hours.
+
+```bash
+./listen.sh
+./listen.sh --session_id "<peer-session-id>"
+./listen.sh --timeout 900      # exit 124 if nothing arrives within 15 minutes
+./listen.sh --once             # print the first batch, then exit
+```
+
+- `--timeout` bounds the whole run, not a single poll; `0` (the default) waits
+  forever and only Ctrl-C or a signal stops it.
+- `--interval` controls how often the server is asked (default 2s).
+- Omit `--session_id` to watch every conversation; add `--all` to say so
+  explicitly.
+- Exit status is `0` after `--once` or an interrupt, and `124` when the overall
+  `--timeout` elapses with nothing unread.
 
 ## List contacts
 
@@ -194,8 +232,11 @@ connects this session to them. Each row includes `SESSION_ID`, `NAME`, and
 
 - The server is the source of truth. There is no background process to run.
 - `send.sh` and `check_msg.sh` are safe to call repeatedly.
-- `check_msg.sh` marks the messages it prints as read. `wait_msg.sh` only reports
-  unread counts and never marks messages as read.
+- `check_msg.sh` marks the messages it prints as read; `--unread-only` narrows
+  that to messages still unread. `wait_msg.sh` only reports unread counts and
+  never marks messages as read.
+- `wait_msg.sh` and `listen.sh` return `124` on timeout, which is the portable
+  way to tell "nothing arrived" from an error in a shell loop.
 - Use `--text` for progress updates and short reports. Use `--file` for large
   artifacts instead of pasting content into the message body. Never send
   credentials, tokens, or private keys, even as a file.
@@ -214,5 +255,10 @@ connects this session to them. Each row includes `SESSION_ID`, `NAME`, and
 - `unable to decrypt session credentials`: the environment does not match the
   session that registered the workspace.
 - `contact not found`: ask the user to connect the agents on the topology page.
+- `token file not found` / `token file is empty`: `--token-file` points at a
+  missing or blank file; it must contain the plain token text.
+- `--token and --token-file are mutually exclusive`: pass exactly one.
+- Exit code `124` from `wait_msg.sh` or `listen.sh`: the window ended with no
+  unread message. That is not an error; call again or raise `--timeout`.
 - `401`: the registration token is invalid, or the agent was deleted. Register a
   new session with a new token.

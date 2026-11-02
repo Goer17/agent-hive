@@ -18,6 +18,10 @@ Options:
   --timeout    Maximum wait in seconds; 0 waits forever (default: 0)
   --interval   Poll interval in seconds, 1 to 60 (default: 2)
 
+Exit status:
+  0    Unread messages exist
+  124  --timeout elapsed with no unread message
+
 Environment:
   HIVE_SESSION_ID   Registered session id
   HIVE_SESSION_PWD  Session password
@@ -81,7 +85,7 @@ while true; do
 
   if [[ "$timeout" -gt 0 && $((SECONDS - started)) -ge "$timeout" ]]; then
     printf 'No unread messages within %s seconds.\n' "$timeout" >&2
-    exit 0
+    exit 124
   fi
 
   sleep "$interval"

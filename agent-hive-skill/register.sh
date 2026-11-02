@@ -7,11 +7,17 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: register.sh --token TOKEN [--workspace PATH] --task TASK
+Usage: register.sh (--token TOKEN | --token-file PATH) [--workspace PATH] --task TASK
 
 Register this agent session with the Agent Hive server. The workspace defaults
 to the current directory. Credentials are written to
 <workspace>/.agent-hive/<session_id>/credentials.enc.
+
+Pass the registration token with exactly one of:
+  --token TOKEN        Token value on the command line (visible in ps/history).
+  --token-file PATH    File holding the token; the file is read and not echoed.
+                       Preferred: it keeps the token out of `ps` and shell
+                       history. Delete the file once registration succeeds.
 
 Server URL:
   Set HIVE_SERVER_URL in agent-hive-skill/.env (default: http://localhost:3000).
@@ -22,6 +28,7 @@ EOF
 }
 
 token=""
+token_file=""
 workspace="."
 task=""
 
@@ -30,6 +37,11 @@ while [[ $# -gt 0 ]]; do
     --token)
       [[ $# -ge 2 ]] || die "--token requires a value"
       token="$2"
+      shift 2
+      ;;
+    --token-file)
+      [[ $# -ge 2 ]] || die "--token-file requires a value"
+      token_file="$2"
       shift 2
       ;;
     --workspace)
@@ -55,9 +67,24 @@ done
 require_common
 require_cmd hostname
 
-[[ -n "$token" ]] || die "missing --token"
+[[ -n "$token" || -n "$token_file" ]] || die "missing --token or --token-file"
+[[ -z "$token" || -z "$token_file" ]] || die "--token and --token-file are mutually exclusive"
 [[ -n "$task" ]] || die "missing --task"
 [[ -d "$workspace" ]] || die "workspace does not exist: $workspace"
+
+if [[ -n "$token_file" ]]; then
+  [[ -e "$token_file" ]] || die "token file not found: $token_file"
+  [[ -f "$token_file" ]] || die "token file is not a regular file: $token_file"
+  [[ -r "$token_file" ]] || die "token file is not readable: $token_file"
+  if [[ -n "$(find "$token_file" -maxdepth 0 -perm /077 2>/dev/null)" ]]; then
+    printf 'warning: %s is readable by other users; chmod 600 is recommended\n' "$token_file" >&2
+  fi
+  # Strip line endings and surrounding whitespace so a trailing newline is fine.
+  token="$(tr -d '\r\n' <"$token_file")"
+  token="${token#"${token%%[![:space:]]*}"}"
+  token="${token%"${token##*[![:space:]]}"}"
+  [[ -n "$token" ]] || die "token file is empty: $token_file"
+fi
 
 workspace="$(cd -- "$workspace" && pwd -P)"
 server_url="$(normalize_server_url "${HIVE_SERVER_URL:-$DEFAULT_SERVER_URL}")"
