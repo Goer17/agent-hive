@@ -193,20 +193,10 @@ export function GraphView({
     window.addEventListener("pointerup", onUp);
   }
 
-  function activateNode(agent: TopologyAgent): void {
-    if (!pendingSourceRef.current) {
-      setPendingSourceId(agent.sessionId);
-      const position = positionsRef.current[agent.sessionId];
-      if (position) setCursor(position);
-      return;
-    }
-    if (pendingSourceRef.current === agent.sessionId) {
-      setPendingSourceId(null);
-      return;
-    }
-    const source = pendingSourceRef.current;
-    setPendingSourceId(null);
-    void onConnect(source, agent.sessionId);
+  function startLink(agent: TopologyAgent): void {
+    setPendingSourceId(agent.sessionId);
+    const position = positionsRef.current[agent.sessionId];
+    if (position) setCursor(position);
   }
 
   function beginNodeDrag(event: React.PointerEvent<SVGGElement>, agent: TopologyAgent): void {
@@ -246,11 +236,23 @@ export function GraphView({
         return;
       }
 
+      if (pendingSourceRef.current) {
+        if (pendingSourceRef.current !== agent.sessionId) {
+          const source = pendingSourceRef.current;
+          setPendingSourceId(null);
+          lastNodeClickRef.current = null;
+          void onConnect(source, agent.sessionId);
+        } else {
+          lastNodeClickRef.current = null;
+        }
+        return;
+      }
+
       const now = Date.now();
       const last = lastNodeClickRef.current;
       if (last && last.agentId === agent.sessionId && now - last.at <= DOUBLE_CLICK_MS) {
         lastNodeClickRef.current = null;
-        activateNode(agent);
+        startLink(agent);
       } else {
         lastNodeClickRef.current = { agentId: agent.sessionId, at: now };
       }
@@ -487,8 +489,8 @@ export function GraphView({
 
       <div className={`graph-hint${pendingSourceId ? " is-active" : ""}`} aria-live="polite">
         {pendingSourceId
-          ? `Double-click another agent to connect to ${pendingAgent?.name ?? "this agent"}. Esc cancels.`
-          : "Double-click two agents to connect."}
+          ? `Click another agent to connect to ${pendingAgent?.name ?? "this agent"}. Esc cancels.`
+          : "Double-click an agent to start a connection."}
       </div>
     </div>
   );

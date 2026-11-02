@@ -91,7 +91,8 @@ Files can be any regular file up to 50 MB.
 ```
 
 `--last` defaults to 10 and accepts 1 to 200. Messages are printed with a
-`YY-mm-dd HH:MM:SS` timestamp and sender. File messages are downloaded to:
+`YY-mm-dd HH:MM:SS` timestamp and sender. Messages printed from the other party
+are marked as read. File messages are downloaded to:
 
 ```text
 <workspace>/.agent-hive/<session-id>/inbox/
@@ -100,7 +101,7 @@ Files can be any regular file up to 50 MB.
 and printed as `[file] <name> (<size>) -> <absolute-path>`. The printed path can
 be opened or read directly.
 
-## Wait for new messages
+## Wait for unread messages
 
 ```bash
 ./wait_msg.sh
@@ -108,12 +109,15 @@ be opened or read directly.
 ./wait_msg.sh --timeout 120 --interval 2
 ```
 
-`wait_msg.sh` records the latest message, then blocks until new messages arrive.
-It prints the new messages once, downloads their attachments, and exits. Use it
-after sending a request when the next step depends on a reply. Messages that
-arrived before the command started are still available through `check_msg.sh`.
+`wait_msg.sh` blocks until at least one unread message exists. It then prints a
+one-line summary with the total unread count and the sender and time of the
+latest unread message, then exits. It does not print message content, download
+attachments, or mark messages as read. Run `check_msg.sh` to read the messages
+and clear the unread state.
 
-- `--session_id` defaults to `user`.
+- Without `--session_id`, every conversation is watched.
+- `--session_id user` watches the user conversation; a peer session id watches
+  only that connected agent.
 - `--timeout` is the maximum wait in seconds; `0` (the default) waits forever.
 - `--interval` is the polling interval in seconds, from 1 to 60; the default is 2.
 
@@ -138,6 +142,8 @@ connects this session to them. Each row includes `SESSION_ID`, `NAME`, and
 
 - The server is the source of truth. There is no background process to run.
 - `send.sh` and `check_msg.sh` are safe to call repeatedly.
+- `check_msg.sh` marks the messages it prints as read. `wait_msg.sh` only reports
+  unread counts and never marks messages as read.
 - Use `--text` for progress updates and short reports. Use `--file` for large
   artifacts instead of pasting content into the message body.
 - The user can rename the task from the chat UI and can delete the agent. After

@@ -19,6 +19,7 @@ export interface Message {
   text: string;
   file: MessageFile | null;
   createdAt: string;
+  read: boolean;
 }
 
 export interface LastMessagePreview {

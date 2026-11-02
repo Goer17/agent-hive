@@ -1066,6 +1066,18 @@ a {
   white-space: nowrap;
 }
 
+.message-read {
+  color: var(--muted-2);
+  font-size: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.message-read.is-read {
+  color: var(--success);
+}
+
 .message-bubble {
   max-width: 100%;
   padding: 10px 13px;
@@ -2297,6 +2309,20 @@ a {
 .edge-message-meta span {
   color: var(--muted);
   font-weight: 500;
+}
+
+.edge-message-state {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.edge-message-state .message-read {
+  color: var(--muted-2);
+}
+
+.edge-message-state .message-read.is-read {
+  color: var(--success);
 }
 
 .edge-message-bubble {

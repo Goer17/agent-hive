@@ -59,6 +59,27 @@ function loadStore(): StoreData {
   data.usedAgentNames ??= [];
   data.settings ??= { notifications: { email: null, enabled: false } };
   data.settings.notifications ??= { email: null, enabled: false };
+
+  const missingReadFlags = data.messages.some(
+    (message) => typeof (message as { read?: unknown }).read !== "boolean",
+  );
+  for (const message of data.messages) {
+    if (typeof message.read !== "boolean") message.read = true;
+  }
+  if (missingReadFlags) {
+    for (const agent of data.agents) {
+      if (!agent.unread) continue;
+      const conversation = `u:${agent.sessionId}`;
+      const pending = data.messages
+        .filter(
+          (message) =>
+            message.conversation === conversation && message.from.role === "agent",
+        )
+        .slice(-agent.unread);
+      for (const message of pending) message.read = false;
+    }
+  }
+
   if (!data.categories.some((category) => category.id === UNCATEGORIZED_ID)) {
     data.categories.unshift({
       id: UNCATEGORIZED_ID,

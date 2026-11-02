@@ -38,6 +38,7 @@ export function createMessage(input: CreateMessageInput): MessageRecord {
     text,
     file,
     createdAt: new Date().toISOString(),
+    read: false,
   };
   store.data.messages.push(message);
   store.save();
@@ -51,6 +52,7 @@ export function toPublicMessage(message: MessageRecord): MessagePublic {
     text: message.text,
     file: message.file ? publicFile(message.file) : null,
     createdAt: message.createdAt,
+    read: message.read,
   };
 }
 
@@ -112,6 +114,88 @@ export function listAgentConversation(
   return store.data.messages
     .filter((message) => message.conversation === conversation)
     .slice(-last);
+}
+
+function incomingTargetForAgent(
+  message: MessageRecord,
+  agentId: string,
+): "user" | string | null {
+  if (message.conversation === userConversation(agentId)) {
+    return message.from.role === "user" ? "user" : null;
+  }
+  if (!message.conversation.startsWith("p:")) return null;
+  const participants = message.conversation.slice(2).split(":");
+  if (!participants.includes(agentId)) return null;
+  if (message.from.role === "agent" && message.from.agentId === agentId) return null;
+  const other = participants.find((id) => id !== agentId);
+  return other ?? null;
+}
+
+export interface UnreadSummary {
+  unreadCount: number;
+  latest: {
+    message: MessageRecord;
+    target: "user" | string;
+  } | null;
+}
+
+export function unreadSummary(agentId: string, target?: string): UnreadSummary {
+  const conversation = target ? agentConversation(agentId, target) : null;
+  let unreadCount = 0;
+  let latest: UnreadSummary["latest"] = null;
+
+  for (const message of store.data.messages) {
+    if (message.read) continue;
+    if (conversation && message.conversation !== conversation) continue;
+    const messageTarget = incomingTargetForAgent(message, agentId);
+    if (!messageTarget) continue;
+    unreadCount += 1;
+    latest = { message, target: messageTarget };
+  }
+
+  return { unreadCount, latest };
+}
+
+export function markAgentConversationRead(
+  agentId: string,
+  target: string,
+  messageIds: string[],
+): number {
+  const conversation = agentConversation(agentId, target);
+  const ids = new Set(messageIds);
+  let marked = 0;
+
+  for (const message of store.data.messages) {
+    if (message.conversation !== conversation || !ids.has(message.id) || message.read) {
+      continue;
+    }
+    if (!incomingTargetForAgent(message, agentId)) continue;
+    message.read = true;
+    marked += 1;
+  }
+
+  if (marked > 0) store.save();
+  return marked;
+}
+
+export function markUserConversationRead(agentId: string): number {
+  const conversation = userConversation(agentId);
+  let marked = 0;
+
+  for (const message of store.data.messages) {
+    if (
+      message.conversation === conversation &&
+      message.from.role === "agent" &&
+      message.from.agentId === agentId &&
+      !message.read
+    ) {
+      message.read = true;
+      marked += 1;
+    }
+  }
+
+  if (marked > 0) store.save();
+  return marked;
 }
 
 export function listAgentConversationAfter(

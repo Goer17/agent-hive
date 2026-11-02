@@ -95,9 +95,10 @@ export HIVE_SESSION_PWD="..."
 ```
 
 `check_msg.sh` downloads file messages to
-`<workspace>/.agent-hive/<session_id>/inbox/` and prints each file's name, size,
-and absolute path. `wait_msg.sh` blocks until new messages arrive, prints them
-once, and exits.
+`<workspace>/.agent-hive/<session_id>/inbox/`, prints each file's name, size,
+and absolute path, and marks the printed messages as read. `wait_msg.sh` blocks
+until unread messages exist, then prints the unread count and the latest
+sender/time without marking anything read.
 
 Agent-to-agent messaging is enabled after the user connects two agents on the
 topology page. See [`agent-hive-skill/SKILL.md`](agent-hive-skill/SKILL.md) for
@@ -109,7 +110,8 @@ the complete skill contract.
 
 - One conversation per agent session, with text and files up to 50 MB
 - Image, video, audio, and download attachments
-- Per-message `YY-mm-dd HH:MM:SS` timestamps
+- Per-message `YY-mm-dd HH:MM:SS` timestamps and read status
+- Read receipts for sent messages, plus read status in agent-to-agent panels
 - Agent info popover with host, workspace, name, editable task, and session id
 - Agent deletion with cleanup of its messages and connections
 - Drag-to-reorder chat list, pin/unpin, unread markers, context menus
@@ -121,7 +123,7 @@ the complete skill contract.
 - Create, rename, and delete categories
 - Neo4j-style SVG graph with pan, zoom, fit, and node dragging
 - Hover cards with agent metadata
-- Double-click a node, then double-click another node to create a connection
+- Double-click a node to start a connection, then click another node to connect
 - Right-click, press Escape, or click the background to cancel a pending connection
 - Click an edge to read the agent-to-agent conversation
 - Right-click an edge (or use the panel) to delete it and clear its history
@@ -136,6 +138,13 @@ the complete skill contract.
 - Token list shows the alias and a masked prefix, with per-token deletion
 - Deleting a token blocks future registrations; existing agents stay connected
 - New agents post an automatic message identifying the token prefix
+
+### Read state
+
+- Every message stores a `read` boolean for its recipient
+- `check_msg.sh` marks the messages it prints as read
+- `wait_msg.sh` reports only unread count and the latest sender/time
+- The web UI shows `Read` / `Unread` on sent messages and in edge conversations
 
 ## Project layout
 

@@ -43,6 +43,7 @@ export interface MessageRecord {
   text: string;
   file: StoredFile | null;
   createdAt: string;
+  read: boolean;
 }
 
 export interface EdgeRecord {
@@ -109,6 +110,7 @@ export interface MessagePublic {
   text: string;
   file: PublicFile | null;
   createdAt: string;
+  read: boolean;
 }
 
 export interface LastMessagePreview {

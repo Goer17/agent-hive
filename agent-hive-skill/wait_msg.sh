@@ -9,9 +9,10 @@ usage() {
   cat <<'EOF'
 Usage: wait_msg.sh [--session_id TARGET] [--timeout SECONDS] [--interval SECONDS]
 
-Wait until new messages arrive in a conversation, print them once, then exit.
-TARGET defaults to "user". Attachments are downloaded to
-<workspace>/.agent-hive/<session_id>/inbox/.
+Wait until unread messages exist, print who sent the latest one and the total
+unread count, then exit. Without --session_id, all conversations are watched.
+TARGET restricts the wait to the user or a connected agent. This command does
+not mark messages as read.
 
 Options:
   --timeout    Maximum wait in seconds; 0 waits forever (default: 0)
@@ -23,7 +24,7 @@ Environment:
 EOF
 }
 
-target="user"
+target=""
 timeout="0"
 interval="2"
 
@@ -59,33 +60,28 @@ done
 [[ "$interval" -le 60 ]] || die "--interval must be between 1 and 60"
 
 load_session
-assert_contact "$target"
 
-encoded_target="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$target")"
-baseline="$(http_get "/api/agent/messages?with=$encoded_target&last=1")"
-last_id="$(printf '%s' "$baseline" | python3 "$HIVE_PY" last-message-id)"
+unread_path="/api/agent/unread"
+if [[ -n "$target" ]]; then
+  assert_contact "$target"
+  encoded_target="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$target")"
+  unread_path="/api/agent/unread?with=$encoded_target"
+fi
 
-printf 'Waiting for new messages...\n' >&2
+printf 'Waiting for unread messages...\n' >&2
 started=$SECONDS
 
 while true; do
-  if [[ -n "$last_id" ]]; then
-    encoded_after="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$last_id")"
-    body="$(http_get "/api/agent/messages?with=$encoded_target&after=$encoded_after")"
-  else
-    body="$(http_get "/api/agent/messages?with=$encoded_target&last=200")"
-  fi
+  body="$(http_get "$unread_path")"
+  count="$(json_field unread_count "$body")"
 
-  if printf '%s' "$body" | python3 "$HIVE_PY" has-messages; then
-    printf '%s' "$body" |
-      HIVE_INBOX_DIR="$SESSION_DIR/inbox" \
-      HIVE_SERVER_URL="$SERVER_URL" \
-      python3 "$HIVE_PY" render-messages
+  if [[ "$count" =~ ^[1-9][0-9]*$ ]]; then
+    printf '%s' "$body" | python3 "$HIVE_PY" render-unread
     exit 0
   fi
 
   if [[ "$timeout" -gt 0 && $((SECONDS - started)) -ge "$timeout" ]]; then
-    printf 'No new messages within %s seconds.\n' "$timeout" >&2
+    printf 'No unread messages within %s seconds.\n' "$timeout" >&2
     exit 0
   fi
 

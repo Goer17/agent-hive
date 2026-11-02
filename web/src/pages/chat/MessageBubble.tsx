@@ -36,6 +36,14 @@ export function MessageBubble({
         <div className="message-meta">
           <span className="message-author">{isAgent ? message.from.name : "user"}</span>
           <time dateTime={message.createdAt}>{formatTimestamp(message.createdAt)}</time>
+          {!isAgent ? (
+            <span
+              className={`message-read${message.read ? " is-read" : ""}`}
+              title={message.read ? "Read by the agent" : "Not read by the agent"}
+            >
+              {message.read ? "Read" : "Unread"}
+            </span>
+          ) : null}
         </div>
         <div className={`message-bubble${message.file ? " has-file" : ""}`}>
           {message.file ? <FileAttachment file={message.file} onMediaLoad={onMediaLoad} /> : null}

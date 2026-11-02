@@ -16,6 +16,7 @@ import {
   createMessage,
   deleteAllForAgent,
   listUserConversation,
+  markUserConversationRead,
   toPublicMessage,
   userConversation,
   conversationParticipantIds,
@@ -50,6 +51,7 @@ const updateSchema = z.object({
 agentsRouter.patch("/:id", (request, response) => {
   const body = updateSchema.parse(request.body);
   const agent = updateAgent(request.params.id, body);
+  if (body.unread === 0) markUserConversationRead(agent.sessionId);
   events.emit({ type: "agents", data: {} });
   if (body.categoryId !== undefined) {
     events.emit({ type: "topology", data: {} });
@@ -92,6 +94,7 @@ agentsRouter.post(
         agent.unread = 0;
         store.save();
       }
+      markUserConversationRead(agent.sessionId);
       events.emit({
         type: "message",
         data: {

@@ -120,7 +120,12 @@ export function EdgeConversationPanel({
           <article key={message.id} className="edge-message">
             <div className="edge-message-meta">
               <span>{message.from.name}</span>
-              <time dateTime={message.createdAt}>{formatTimestamp(message.createdAt)}</time>
+              <span className="edge-message-state">
+                <time dateTime={message.createdAt}>{formatTimestamp(message.createdAt)}</time>
+                <span className={`message-read${message.read ? " is-read" : ""}`}>
+                  {message.read ? "Read" : "Unread"}
+                </span>
+              </span>
             </div>
             <div className="edge-message-bubble">
               {message.file ? (

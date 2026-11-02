@@ -56,3 +56,10 @@ printf '%s' "$body" |
   HIVE_INBOX_DIR="$SESSION_DIR/inbox" \
   HIVE_SERVER_URL="$SERVER_URL" \
   python3 "$HIVE_PY" render-messages
+
+read_payload="$(
+  printf '%s' "$body" |
+    HIVE_TARGET="$target" \
+    python3 "$HIVE_PY" make-read-json
+)"
+http_post_json "/api/agent/messages/read" "$read_payload" >/dev/null

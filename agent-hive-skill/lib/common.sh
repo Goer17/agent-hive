@@ -128,6 +128,34 @@ load_session() {
   export HIVE_SERVER_URL="$SERVER_URL"
 }
 
+http_post_json() {
+  local path="$1"
+  local payload="$2"
+  local tmp status body
+  tmp="$(mktemp)"
+
+  if ! status="$(
+    curl -sS -o "$tmp" -w '%{http_code}' \
+      -X POST \
+      -H "Content-Type: application/json" \
+      -H "X-Hive-Session-Id: $HIVE_SESSION_ID" \
+      -H "X-Hive-Session-Pwd: $HIVE_SESSION_PWD" \
+      -d "$payload" \
+      "$SERVER_URL$path"
+  )"; then
+    rm -f "$tmp"
+    die "unable to reach $SERVER_URL"
+  fi
+
+  body="$(cat "$tmp")"
+  rm -f "$tmp"
+
+  if [[ "$status" -lt 200 || "$status" -ge 300 ]]; then
+    die "$(response_error "$body" "$status")"
+  fi
+  printf '%s' "$body"
+}
+
 http_get() {
   local path="$1"
   local tmp status body

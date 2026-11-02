@@ -14,6 +14,8 @@ import {
   fileById,
   listAgentConversation,
   listAgentConversationAfter,
+  markAgentConversationRead,
+  unreadSummary,
   userConversation,
 } from "../services/messages.service.js";
 import { notifyUserMessage } from "../services/notifications.js";
@@ -102,6 +104,30 @@ agentApiRouter.get("/contacts", (request, response) => {
   response.json({ contacts: contactsForAgent(agent.sessionId) });
 });
 
+agentApiRouter.get("/unread", (request, response) => {
+  const agent = (request as AgentRequest).agent;
+  const target = (queryString(request.query.with) ?? "").trim();
+  if (target) agentConversationTarget(agent, target);
+  const summary = unreadSummary(agent.sessionId, target || undefined);
+  const latest = summary.latest;
+
+  response.json({
+    unread_count: summary.unreadCount,
+    latest: latest
+      ? {
+          id: latest.message.id,
+          from: {
+            session_id: latest.message.from.agentId ?? "user",
+            name: latest.message.from.name,
+            type: latest.message.from.role,
+          },
+          created_at: latest.message.createdAt,
+          target: latest.target,
+        }
+      : null,
+  });
+});
+
 function agentMessagePayload(message: MessageRecord): Record<string, unknown> {
   return {
     id: message.id,
@@ -122,6 +148,7 @@ function agentMessagePayload(message: MessageRecord): Record<string, unknown> {
         }
       : null,
     created_at: message.createdAt,
+    read: message.read,
   };
 }
 
@@ -149,6 +176,34 @@ agentApiRouter.get("/messages", (request, response) => {
     contact,
     messages: messages.map(agentMessagePayload),
   });
+});
+
+const readSchema = z.object({
+  with: z.string().min(1).max(200),
+  ids: z.array(z.string().min(1)).max(200),
+});
+
+agentApiRouter.post("/messages/read", (request, response) => {
+  const agent = (request as AgentRequest).agent;
+  const body = readSchema.parse(request.body);
+  const resolved = agentConversationTarget(agent, body.with);
+  const marked = markAgentConversationRead(agent.sessionId, body.with, body.ids);
+
+  if (marked > 0) {
+    events.emit({
+      type: "message",
+      data: {
+        conversation: resolved.conversation,
+        agentIds: [
+          agent.sessionId,
+          ...(resolved.other ? [resolved.other.sessionId] : []),
+        ],
+        read: true,
+      },
+    });
+  }
+
+  response.json({ marked });
 });
 
 agentApiRouter.post(

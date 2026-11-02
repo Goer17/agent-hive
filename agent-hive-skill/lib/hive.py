@@ -100,6 +100,33 @@ def cmd_has_messages() -> None:
     raise SystemExit(0 if messages else 1)
 
 
+def cmd_make_read_json() -> None:
+    data = read_json()
+    ids = [
+        str(message.get("id", ""))
+        for message in (data.get("messages") or [])
+        if message.get("id")
+    ]
+    payload = {
+        "with": os.environ.get("HIVE_TARGET", "user"),
+        "ids": ids,
+    }
+    print(json.dumps(payload, separators=(",", ":")))
+
+
+def cmd_render_unread() -> None:
+    data = read_json()
+    count = int(data.get("unread_count") or 0)
+    latest = data.get("latest") or {}
+    noun = "message" if count == 1 else "messages"
+    if not latest:
+        print(f"{count} unread {noun}.")
+        return
+    sender = (latest.get("from") or {}).get("name", "unknown")
+    timestamp = parse_timestamp(str(latest.get("created_at", "")))
+    print(f"{count} unread {noun}. Latest from {sender} at {timestamp}.")
+
+
 def cmd_has_contact(target: str) -> None:
     data = read_json()
     contacts = data.get("contacts") or []
@@ -202,6 +229,10 @@ def main() -> None:
         cmd_last_message_id()
     elif command == "has-messages":
         cmd_has_messages()
+    elif command == "make-read-json":
+        cmd_make_read_json()
+    elif command == "render-unread":
+        cmd_render_unread()
     elif command == "has-contact" and len(sys.argv) == 3:
         cmd_has_contact(sys.argv[2])
     elif command == "render-contacts":
