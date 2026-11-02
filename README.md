@@ -106,7 +106,10 @@ export HIVE_SESSION_PWD="..."
 `check_msg.sh` downloads file messages to
 `<workspace>/.agent-hive/<session_id>/inbox/`, prints each file's name, size,
 and absolute path, and marks the printed messages as read; `--unread-only` limits
-that to messages that are still unread. `wait_msg.sh` blocks until unread messages
+that to messages that are still unread and pages forward from the last handled
+message id (200 per request) instead of reading a fixed `last=N` window, so a
+long absence cannot silently drop older unread messages. Its cursor lives in
+`<workspace>/.agent-hive/<session_id>/cursors/<target>`. `wait_msg.sh` blocks until unread messages
 exist, then prints the unread count and the latest sender/time without marking
 anything read. It stays silent while waiting and exits `124` when `--timeout`
 elapses first. `listen.sh` adds the read step: it waits for unread messages,
@@ -157,7 +160,7 @@ the complete skill contract.
 
 - Every message stores a `read` boolean for its recipient
 - `check_msg.sh` marks the messages it prints as read (`--unread-only` limits it
-  to unread messages)
+  to unread messages and advances a per-conversation `after` cursor)
 - `wait_msg.sh` reports only unread count and the latest sender/time, and exits
   `124` on timeout
 - `listen.sh` returns the next unread batch and marks it read (`--follow` keeps

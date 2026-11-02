@@ -126,7 +126,7 @@ while true; do
   fi
 
   echo "-----"
-  check_args=(--last 200 --unread-only)
+  check_args=(--unread-only)
   if [[ "$watch_all" != "1" ]]; then
     check_args+=(--session_id "$target")
   fi

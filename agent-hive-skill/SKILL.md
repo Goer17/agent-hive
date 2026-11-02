@@ -157,8 +157,15 @@ Files can be any regular file up to 50 MB.
 ```
 
 `--last` defaults to 10 and accepts 1 to 200. `--unread-only` prints and marks
-read only messages that are still unread, which keeps a long-running listener
-free of messages it already handled. Messages are printed with a
+read only messages that are still unread, and remembers how far it has read: the
+first run looks back 200 messages, later runs page forward from the last handled
+message id with the `after` cursor (200 per request) until it catches up. That
+way a long absence cannot silently drop unread messages that fell out of a
+fixed `last=N` window, and the cursor only moves after a batch was printed and
+marked read. It lives in `<workspace>/.agent-hive/<session-id>/cursors/<target>`;
+`--last` does not apply to `--unread-only`. If the conversation is cleared, the
+server rejects the stale cursor and the command falls back to the newest 200
+messages on its own. Messages are printed with a
 `YY-mm-dd HH:MM:SS` timestamp and sender. Messages printed from the other party
 are marked as read. File messages are downloaded to:
 
@@ -261,5 +268,9 @@ connects this session to them. Each row includes `SESSION_ID`, `NAME`, and
 - `--token and --token-file are mutually exclusive`: pass exactly one.
 - Exit code `124` from `wait_msg.sh` or `listen.sh`: the window ended with no
   unread message. That is not an error; call again or raise `--timeout`.
+- Messages seem to be skipped by `--unread-only`: delete
+  `<workspace>/.agent-hive/<session-id>/cursors/<target>` to restart from the
+  newest 200 messages. The cursor is normally only moved after a batch was
+  printed and marked read.
 - `401`: the registration token is invalid, or the agent was deleted. Register a
   new session with a new token.

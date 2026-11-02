@@ -6,6 +6,7 @@ import os
 import re
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -108,6 +109,97 @@ def cmd_filter_unread() -> None:
     ]
     print(json.dumps(output, separators=(",", ":")))
 
+PAGE_LIMIT = 200
+
+
+def agent_get(path):
+    """GET an agent API path with the session headers; never raises on 4xx."""
+    server_url = os.environ.get("HIVE_SERVER_URL", "http://localhost:3000").rstrip("/")
+    request = urllib.request.Request(
+        f"{server_url}{path}",
+        headers={
+            "X-Hive-Session-Id": os.environ.get("HIVE_SESSION_ID", ""),
+            "X-Hive-Session-Pwd": os.environ.get("HIVE_SESSION_PWD", ""),
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return response.status, json.loads(response.read().decode())
+    except urllib.error.HTTPError as error:
+        try:
+            payload = json.loads(error.read().decode())
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
+            payload = {}
+        return error.code, payload
+    except (urllib.error.URLError, OSError):
+        fail(f"unable to reach {server_url}")
+
+
+def cmd_fetch_unread() -> None:
+    """Page forward from the stored cursor and print every message since then.
+
+    `after=<message id>` returns the messages that follow a known id, so a
+    listener can walk forward in PAGE_LIMIT chunks instead of silently dropping
+    anything older than a `last=N` window. The cursor is only moved by the
+    caller (HIVE_FETCH_CURSOR_OUT) once the batch was actually handled.
+    """
+    target = os.environ.get("HIVE_FETCH_TARGET", "user")
+    cursor_file = os.environ.get("HIVE_FETCH_CURSOR_FILE", "")
+    cursor_out = os.environ.get("HIVE_FETCH_CURSOR_OUT", "")
+    bootstrap = int(os.environ.get("HIVE_FETCH_BOOTSTRAP", "200") or 200)
+    quoted = urllib.parse.quote(target, safe="")
+
+    cursor = ""
+    if cursor_file and os.path.exists(cursor_file):
+        try:
+            cursor = Path(cursor_file).read_text(encoding="utf-8").strip()
+        except OSError:
+            cursor = ""
+
+    contact = None
+    messages = []
+    paged = False
+
+    if cursor:
+        next_cursor = cursor
+        while True:
+            status, data = agent_get(
+                f"/api/agent/messages?with={quoted}&after={urllib.parse.quote(next_cursor, safe='')}"
+            )
+            if status == 400:
+                # The cursor message is gone (conversation cleared, store reset).
+                # Start over from the newest window instead of failing the call.
+                cursor = ""
+                messages = []
+                break
+            if status != 200:
+                fail(f"request failed (HTTP {status}): {data.get('error', 'unknown error')}")
+            contact = data.get("contact") or contact
+            page = data.get("messages") or []
+            messages.extend(page)
+            paged = True
+            if len(page) < PAGE_LIMIT:
+                break
+            next_cursor = str(page[-1].get("id") or "")
+            if not next_cursor:
+                break
+
+    if not paged:
+        status, data = agent_get(f"/api/agent/messages?with={quoted}&last={bootstrap}")
+        if status != 200:
+            fail(f"request failed (HTTP {status}): {data.get('error', 'unknown error')}")
+        contact = data.get("contact")
+        messages = data.get("messages") or []
+
+    print(json.dumps({"contact": contact, "messages": messages}, separators=(",", ":")))
+
+    newest = str((messages[-1] or {}).get("id") or "") if messages else ""
+    if cursor_out and newest:
+        try:
+            Path(cursor_out).write_text(newest, encoding="utf-8")
+        except OSError:
+            fail(f"unable to write cursor file: {cursor_out}")
+
 
 def cmd_make_read_json() -> None:
     data = read_json()
@@ -116,11 +208,17 @@ def cmd_make_read_json() -> None:
         for message in (data.get("messages") or [])
         if message.get("id")
     ]
-    payload = {
-        "with": os.environ.get("HIVE_TARGET", "user"),
-        "ids": ids,
-    }
-    print(json.dumps(payload, separators=(",", ":")))
+    target = os.environ.get("HIVE_TARGET", "user")
+    chunk = int(os.environ.get("HIVE_READ_CHUNK", "0") or 0)
+    # The read endpoint accepts at most 200 ids per call, and paging can surface
+    # far more than that in one batch, so emit one payload per chunk.
+    size = chunk if chunk > 0 else max(len(ids), 1)
+    payloads = [
+        {"with": target, "ids": ids[start:start + size]}
+        for start in range(0, len(ids), size)
+    ] or [{"with": target, "ids": []}]
+    for payload in payloads:
+        print(json.dumps(payload, separators=(",", ":")))
 
 
 def cmd_render_unread() -> None:
@@ -240,6 +338,8 @@ def main() -> None:
         cmd_has_messages()
     elif command == "filter-unread":
         cmd_filter_unread()
+    elif command == "fetch-unread":
+        cmd_fetch_unread()
     elif command == "make-read-json":
         cmd_make_read_json()
     elif command == "render-unread":

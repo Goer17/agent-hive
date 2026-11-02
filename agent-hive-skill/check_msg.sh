@@ -15,7 +15,14 @@ defaults to "user" and COUNT defaults to 10. Attachments are downloaded to
 wait_msg.sh to block until unread messages exist.
 
 With --unread-only only messages that are still unread are printed and marked
-read, which keeps long-running listeners free of already-handled messages.
+read, and the command remembers how far it has read: the first run looks back
+200 messages, later runs page forward from the last handled message id using the
+`after` cursor, so a long absence cannot silently drop older unread messages.
+The cursor lives in <workspace>/.agent-hive/<session_id>/cursors/<target> and is
+only advanced after a batch has been printed and marked read. COUNT does not
+apply to --unread-only. A conversation that was cleared resets the cursor
+automatically (the server rejects an unknown id with 400 and the command falls
+back to the newest 200 messages).
 
 Environment:
   HIVE_SESSION_ID   Registered session id
@@ -60,12 +67,38 @@ load_session
 assert_contact "$target"
 
 encoded_target="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$target")"
-body="$(http_get "/api/agent/messages?with=$encoded_target&last=$last")"
+
+if [[ "$unread_only" == "1" ]]; then
+  # Page forward with the `after` cursor so a long absence cannot silently drop
+  # unread messages older than a fixed `last=N` window. The cursor only moves
+  # after the batch has been printed and marked read.
+  cursor_dir="$SESSION_DIR/cursors"
+  safe_target="$(printf '%s' "$target" | tr -c 'A-Za-z0-9._-' '_')"
+  cursor_file="$cursor_dir/$safe_target"
+  cursor_tmp="$(mktemp)"
+  mkdir -p "$cursor_dir" 2>/dev/null || true
+  chmod 700 "$cursor_dir" 2>/dev/null || true
+
+  body="$(
+    HIVE_FETCH_TARGET="$target" \
+    HIVE_FETCH_CURSOR_FILE="$cursor_file" \
+    HIVE_FETCH_CURSOR_OUT="$cursor_tmp" \
+    HIVE_FETCH_BOOTSTRAP="200" \
+    python3 "$HIVE_PY" fetch-unread
+  )"
+else
+  cursor_tmp=""
+  body="$(http_get "/api/agent/messages?with=$encoded_target&last=$last")"
+fi
 
 if [[ "$unread_only" == "1" ]]; then
   body="$(printf '%s' "$body" | python3 "$HIVE_PY" filter-unread)"
   if ! printf '%s' "$body" | python3 "$HIVE_PY" has-messages; then
     printf 'No unread messages.\n'
+    # Everything up to the newest message was already read, so the cursor can
+    # move without losing anything.
+    [[ -n "$cursor_tmp" && -s "$cursor_tmp" ]] && mv "$cursor_tmp" "$cursor_file"
+    [[ -n "$cursor_tmp" ]] && rm -f "$cursor_tmp"
     exit 0
   fi
 fi
@@ -75,9 +108,20 @@ printf '%s' "$body" |
   HIVE_SERVER_URL="$SERVER_URL" \
   python3 "$HIVE_PY" render-messages
 
-read_payload="$(
+read_payloads="$(
   printf '%s' "$body" |
     HIVE_TARGET="$target" \
+    HIVE_READ_CHUNK="200" \
     python3 "$HIVE_PY" make-read-json
 )"
-http_post_json "/api/agent/messages/read" "$read_payload" >/dev/null
+
+while IFS= read -r read_payload; do
+  [[ -n "$read_payload" ]] || continue
+  http_post_json "/api/agent/messages/read" "$read_payload" >/dev/null
+done <<<"$read_payloads"
+
+# The batch is read, so the cursor may advance past it.
+if [[ -n "$cursor_tmp" ]]; then
+  [[ -s "$cursor_tmp" ]] && mv "$cursor_tmp" "$cursor_file"
+  rm -f "$cursor_tmp"
+fi
