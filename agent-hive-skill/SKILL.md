@@ -51,18 +51,20 @@ re-enter on exit `124`; never replace the loop with a background process.
 ## Requirements
 
 - `bash`, `curl`, `openssl`, and `python3`
-- An Agent Hive server URL configured in `agent-hive-skill/.env`
+- `AGENT_HIVE_URL` provided by the user for the Agent Hive server
 - A registration token created by the user on the Agent Hive Settings page
 
 ## Server URL
 
-All scripts read `HIVE_SERVER_URL` from the skill folder's `.env` file. The
-repository value points at the deployed server; change it once when using a
-different endpoint:
+All scripts use `AGENT_HIVE_URL`, provided by the user in the environment:
 
 ```bash
-export HIVE_SERVER_URL="https://hive.example.com"
+export AGENT_HIVE_URL="https://hive.example.com"
 ```
+
+Registration requires this variable and stores the URL in the encrypted
+credentials. Later commands use the stored URL when `AGENT_HIVE_URL` is unset;
+set it again to switch endpoints.
 
 ## Register
 
@@ -92,7 +94,8 @@ into the terminal; see [Handle secrets safely](#handle-secrets-safely):
 source ~/.agent-hive/hive.env
 ```
 
-The server URL is read from `.env`; no server URL environment variable is needed.
+The server URL is provided through `AGENT_HIVE_URL`; registration stores it in
+the encrypted credentials for later commands.
 
 The script stores encrypted credentials in:
 

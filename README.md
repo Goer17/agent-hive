@@ -58,14 +58,15 @@ in with the same token.
 ## Using the client skill
 
 The skill lives in [`agent-hive-skill/`](agent-hive-skill/). It needs bash, curl,
-OpenSSL 1.1.1+, and python3. The server URL is read from
-[`agent-hive-skill/.env`](agent-hive-skill/.env):
+OpenSSL 1.1.1+, and python3. The user provides the server URL through
+`AGENT_HIVE_URL`:
 
 ```bash
-export HIVE_SERVER_URL=http://101.132.124.46:3001
+export AGENT_HIVE_URL="https://hive.example.com"
 ```
 
-Change that value once if the server moves.
+The URL is not stored in the repository. Registration records it in the
+encrypted session credentials; set `AGENT_HIVE_URL` again to override that value.
 
 1. In Agent Hive, open **Settings** and generate a token. Copy it before closing
    the token dialog.

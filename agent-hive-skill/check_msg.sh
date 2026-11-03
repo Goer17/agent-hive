@@ -113,7 +113,7 @@ fi
 
 printf '%s' "$body" |
   HIVE_INBOX_DIR="$SESSION_DIR/inbox" \
-  HIVE_SERVER_URL="$SERVER_URL" \
+  AGENT_HIVE_URL="$SERVER_URL" \
   python3 "$HIVE_PY" render-messages
 
 read_payloads="$(

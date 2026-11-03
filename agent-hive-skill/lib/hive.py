@@ -78,7 +78,7 @@ def cmd_make_credentials() -> None:
         "host": response.get("host") or os.environ.get("HIVE_HOST", ""),
         "workspace": response.get("workspace") or os.environ.get("HIVE_WORKSPACE", "."),
         "task": response.get("task", ""),
-        "server_url": os.environ.get("HIVE_SERVER_URL", "http://localhost:3000"),
+        "server_url": os.environ.get("AGENT_HIVE_URL", ""),
         "registered_at": datetime.now(timezone.utc).isoformat(),
         "format": 1,
     }
@@ -114,7 +114,7 @@ PAGE_LIMIT = 200
 
 def agent_get(path):
     """GET an agent API path with the session headers; never raises on 4xx."""
-    server_url = os.environ.get("HIVE_SERVER_URL", "http://localhost:3000").rstrip("/")
+    server_url = os.environ.get("AGENT_HIVE_URL", "").rstrip("/")
     request = urllib.request.Request(
         f"{server_url}{path}",
         headers={
@@ -305,7 +305,7 @@ def cmd_render_messages() -> None:
     data = read_json()
     messages = data.get("messages") or []
     inbox = Path(os.environ.get("HIVE_INBOX_DIR", "inbox"))
-    server_url = os.environ.get("HIVE_SERVER_URL", "http://localhost:3000").rstrip("/")
+    server_url = os.environ.get("AGENT_HIVE_URL", "").rstrip("/")
     if not messages:
         print("No messages.")
         return

@@ -19,10 +19,8 @@ Pass the registration token with exactly one of:
                        Preferred: it keeps the token out of `ps` and shell
                        history. Delete the file once registration succeeds.
 
-Server URL:
-  Set HIVE_SERVER_URL in agent-hive-skill/.env (default: http://localhost:3000).
-
 Environment:
+  AGENT_HIVE_URL    Agent Hive server URL (required)
   HIVE_HOST         Host name reported to the server (default: hostname)
 EOF
 }
@@ -71,6 +69,7 @@ require_cmd hostname
 [[ -z "$token" || -z "$token_file" ]] || die "--token and --token-file are mutually exclusive"
 [[ -n "$task" ]] || die "missing --task"
 [[ -d "$workspace" ]] || die "workspace does not exist: $workspace"
+[[ -n "${AGENT_HIVE_URL:-}" ]] || die "missing environment variable: AGENT_HIVE_URL"
 
 if [[ -n "$token_file" ]]; then
   [[ -e "$token_file" ]] || die "token file not found: $token_file"
@@ -87,7 +86,7 @@ if [[ -n "$token_file" ]]; then
 fi
 
 workspace="$(cd -- "$workspace" && pwd -P)"
-server_url="$(normalize_server_url "${HIVE_SERVER_URL:-$DEFAULT_SERVER_URL}")"
+server_url="$(normalize_server_url "$AGENT_HIVE_URL")"
 host="${HIVE_HOST:-$(hostname)}"
 
 payload="$(
@@ -131,7 +130,7 @@ mkdir -p "$session_dir"
 chmod 700 "$workspace/.agent-hive" "$session_dir"
 
 credentials="$(
-  HIVE_SERVER_URL="$server_url" \
+  AGENT_HIVE_URL="$server_url" \
   HIVE_HOST="$host" \
   python3 "$HIVE_PY" make-credentials <<<"$response"
 )"

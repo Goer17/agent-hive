@@ -5,10 +5,9 @@ set -euo pipefail
 COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HIVE_SKILL_DIR="$(cd "$COMMON_DIR/.." && pwd)"
 HIVE_PY="$HIVE_SKILL_DIR/lib/hive.py"
-DEFAULT_SERVER_URL="http://localhost:3000"
 MAX_FILE_SIZE=52428800
 
-# All skill commands use the server URL configured in the skill's .env file.
+# Optional local overrides. The server URL comes from AGENT_HIVE_URL.
 if [[ -f "$HIVE_SKILL_DIR/.env" ]]; then
   # shellcheck disable=SC1091
   source "$HIVE_SKILL_DIR/.env"
@@ -121,11 +120,14 @@ load_session() {
     die "session credentials do not match HIVE_SESSION_ID"
 
   configured_url="$(json_field server_url "$credentials" 2>/dev/null || true)"
-  SERVER_URL="$(normalize_server_url "${HIVE_SERVER_URL:-${configured_url:-$DEFAULT_SERVER_URL}}")"
+  requested_url="${AGENT_HIVE_URL:-$configured_url}"
+  [[ -n "$requested_url" ]] ||
+    die "missing AGENT_HIVE_URL; export the Agent Hive server URL"
+  SERVER_URL="$(normalize_server_url "$requested_url")"
   SESSION_DIR="$session_dir"
   CREDENTIALS_JSON="$credentials"
   export HIVE_INBOX_DIR="$SESSION_DIR/inbox"
-  export HIVE_SERVER_URL="$SERVER_URL"
+  export AGENT_HIVE_URL="$SERVER_URL"
 }
 
 http_post_json() {
