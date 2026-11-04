@@ -109,6 +109,68 @@ def cmd_filter_unread() -> None:
     ]
     print(json.dumps(output, separators=(",", ":")))
 
+
+def is_incoming_message(message: dict) -> bool:
+    """True when the message was sent *to* this agent (not by it)."""
+    sender = message.get("from") or {}
+    role = sender.get("role")
+    if role == "user":
+        return True
+    if role != "agent":
+        return False
+    sender_id = str(sender.get("agent_id") or "")
+    self_id = os.environ.get("HIVE_SESSION_ID", "")
+    return bool(sender_id) and sender_id != self_id
+
+
+def unread_incoming_ids(messages) -> set[str]:
+    return {
+        str(message.get("id"))
+        for message in messages
+        if message.get("id") and not message.get("read") and is_incoming_message(message)
+    }
+
+
+def read_seen_ids(path: str) -> set[str]:
+    if not path:
+        return set()
+    try:
+        text = Path(path).read_text(encoding="utf-8")
+    except OSError:
+        return set()
+    return {line.strip() for line in text.splitlines() if line.strip()}
+
+
+def cmd_filter_unseen() -> None:
+    """Keep only unread incoming messages whose ids wait_msg.sh never printed."""
+    data = read_json()
+    seen = read_seen_ids(os.environ.get("HIVE_WAIT_SEEN_FILE", ""))
+    output = dict(data)
+    output["messages"] = [
+        message
+        for message in (data.get("messages") or [])
+        if message.get("id")
+        and not message.get("read")
+        and is_incoming_message(message)
+        and str(message.get("id")) not in seen
+    ]
+    print(json.dumps(output, separators=(",", ":")))
+
+
+def cmd_update_seen() -> None:
+    """Replace the wait-seen file with the current unread incoming ids."""
+    data = read_json()
+    path = os.environ.get("HIVE_WAIT_SEEN_FILE", "")
+    if not path:
+        fail("HIVE_WAIT_SEEN_FILE is required")
+    ids = sorted(unread_incoming_ids(data.get("messages") or []))
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.name + ".tmp")
+    tmp.write_text("\n".join(ids) + ("\n" if ids else ""), encoding="utf-8")
+    os.chmod(tmp, 0o600)
+    os.replace(tmp, target)
+
 PAGE_LIMIT = 200
 
 
@@ -346,6 +408,10 @@ def main() -> None:
         cmd_has_messages()
     elif command == "filter-unread":
         cmd_filter_unread()
+    elif command == "filter-unseen":
+        cmd_filter_unseen()
+    elif command == "update-seen":
+        cmd_update_seen()
     elif command == "fetch-unread":
         cmd_fetch_unread()
     elif command == "make-read-json":

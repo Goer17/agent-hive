@@ -113,7 +113,10 @@ long absence cannot silently drop older unread messages. Its cursor lives in
 `<workspace>/.agent-hive/<session_id>/cursors/<target>`. `wait_msg.sh` blocks until unread messages
 exist, then prints the unread count and the latest sender/time without marking
 anything read. It stays silent while waiting and exits `124` when `--timeout`
-elapses first. `listen.sh` adds the read step: it waits for unread messages,
+elapses first. It also remembers the ids it has already reported in
+`<workspace>/.agent-hive/<session_id>/wait-seen/<target>`, so a restarted
+background waiter does not fire again for the same unread backlog; the file is
+replaced on each report and drops ids once read. `listen.sh` adds the read step: it waits for unread messages,
 prints only the new ones, marks them read, and exits `0` so the caller can react;
 add `--follow` to keep looping and print every batch until it is interrupted or
 its `--timeout` expires. An interactive agent must call `listen.sh` in the

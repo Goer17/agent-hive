@@ -232,6 +232,13 @@ download attachments, or mark messages as read. Run `check_msg.sh` to read the
 messages and clear the unread state. It exits `0` when messages are waiting and
 `124` when `--timeout` elapses first, so a caller never has to parse the text.
 
+It also remembers the ids of unread messages it has already reported in
+`<workspace>/.agent-hive/<session-id>/wait-seen/<target>`. A later run keeps
+waiting while the only unread messages are ones it already printed, so a
+background waiter can be restarted without firing repeatedly for the same
+backlog. The file is replaced on each report and drops ids once the messages are
+read. This does not mark anything read.
+
 - Without `--session_id`, every conversation is watched.
 - `--session_id user` watches the user conversation; a peer session id watches
   only that connected agent.
