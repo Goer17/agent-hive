@@ -27,6 +27,7 @@ export interface LastMessagePreview {
   file: MessageFile | null;
   from: Message["from"];
   createdAt: string;
+  read: boolean;
 }
 
 export interface Agent {

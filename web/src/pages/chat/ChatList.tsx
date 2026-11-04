@@ -148,19 +148,29 @@ export function ChatList({
                     {last?.file ? <Paperclip size={11} className="inline-icon" /> : null}
                     {preview}
                   </span>
-                  <button
-                    type="button"
-                    className="row-more"
-                    aria-label={`Actions for ${agent.name}`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      const rect = event.currentTarget.getBoundingClientRect();
-                      onSelect(agent);
-                      openMenu(agent, rect.right, rect.bottom + 4);
-                    }}
-                  >
-                    <Ellipsis size={15} />
-                  </button>
+                  <span className="chat-row-tail">
+                    {last && last.from.role === "user" ? (
+                      <span
+                        className={`chat-row-read${last.read ? " is-read" : ""}`}
+                        title={last.read ? "Read by the agent" : "Not read by the agent"}
+                      >
+                        {last.read ? "Read" : "Unread"}
+                      </span>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="row-more"
+                      aria-label={`Actions for ${agent.name}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        onSelect(agent);
+                        openMenu(agent, rect.right, rect.bottom + 4);
+                      }}
+                    >
+                      <Ellipsis size={15} />
+                    </button>
+                  </span>
                 </div>
               </div>
             </div>

@@ -118,6 +118,7 @@ export interface LastMessagePreview {
   file: PublicFile | null;
   from: MessageRecord["from"];
   createdAt: string;
+  read: boolean;
 }
 
 export interface AgentWithPreview extends AgentPublic {

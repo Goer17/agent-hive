@@ -842,6 +842,23 @@ a {
   min-height: 16px;
 }
 
+.chat-row-tail {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+}
+
+.chat-row-read {
+  color: var(--muted-2);
+  font-size: 9px;
+  letter-spacing: 0.02em;
+}
+
+.chat-row-read.is-read {
+  color: var(--success);
+}
+
 .chat-row-preview {
   min-width: 0;
   overflow: hidden;

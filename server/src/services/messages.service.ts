@@ -95,6 +95,7 @@ export function lastMessageForAgent(agentId: string): LastMessagePreview | null 
         file: message.file ? publicFile(message.file) : null,
         from: message.from,
         createdAt: message.createdAt,
+        read: message.read,
       };
     }
   }
