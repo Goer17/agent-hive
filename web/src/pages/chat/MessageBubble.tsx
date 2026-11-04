@@ -2,6 +2,7 @@ import type { Agent, Message } from "../../types";
 import { Avatar } from "../../components/Avatar";
 import { FileAttachment } from "../../components/FileAttachment";
 import { HiveMark } from "../../components/HiveMark";
+import { Markdown } from "../../components/Markdown";
 import { formatTimestamp } from "../../lib/format";
 
 interface MessageBubbleProps {
@@ -47,7 +48,7 @@ export function MessageBubble({
         </div>
         <div className={`message-bubble${message.file ? " has-file" : ""}`}>
           {message.file ? <FileAttachment file={message.file} onMediaLoad={onMediaLoad} /> : null}
-          {message.text ? <p className="message-text">{message.text}</p> : null}
+          {message.text ? <Markdown text={message.text} className="message-text" /> : null}
         </div>
       </div>
       {!isAgent ? (

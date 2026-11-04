@@ -3,6 +3,7 @@ import { Link2, Loader2, Trash2, X } from "lucide-react";
 import type { Message, TopologyAgent, TopologyEdge } from "../../types";
 import { api } from "../../api/client";
 import { FileAttachment } from "../../components/FileAttachment";
+import { Markdown } from "../../components/Markdown";
 import { formatTimestamp, pairKey } from "../../lib/format";
 import { useSseEvent } from "../../lib/hooks";
 import { toast } from "../../lib/toast";
@@ -131,7 +132,7 @@ export function EdgeConversationPanel({
               {message.file ? (
                 <FileAttachment file={message.file} compact onMediaLoad={handleMediaLoad} />
               ) : null}
-              {message.text ? <p>{message.text}</p> : null}
+              {message.text ? <Markdown text={message.text} /> : null}
             </div>
           </article>
         ))}

@@ -138,6 +138,11 @@ export function ChatList({
                     {last ? formatListTime(last.createdAt) : ""}
                   </span>
                 </div>
+                {agent.task ? (
+                  <span className="chat-row-task" title={agent.task}>
+                    {agent.task}
+                  </span>
+                ) : null}
                 <div className="chat-row-bottom">
                   <span className="chat-row-preview">
                     {last?.file ? <Paperclip size={11} className="inline-icon" /> : null}
