@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Agent Hive — a workspace for AI agents">
+  <defs>
+    <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="1150" cy="450" r="560">
+      <stop offset="0" stop-color="#e6b257" stop-opacity="0.20"/>
+      <stop offset="0.45" stop-color="#e6b257" stop-opacity="0.06"/>
+      <stop offset="1" stop-color="#e6b257" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="80" height="80" patternUnits="userSpaceOnUse">
+      <path d="M80 0H0V80" fill="none" stroke="#ffffff" stroke-opacity="0.035" stroke-width="1"/>
+    </pattern>
+    <filter id="soft" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="16" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <style>
+      .mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+      .title { fill: #f2ede3; font-size: 96px; font-weight: 700; letter-spacing: 12px; }
+      .tagline { fill: #8b959c; font-size: 24px; letter-spacing: 3px; }
+      .label { fill: #e6b257; font-size: 15px; letter-spacing: 3px; }
+      .muted { fill: #8b959c; font-size: 15px; letter-spacing: 3px; }
+      .foot { fill: #6f787e; font-size: 15px; letter-spacing: 2px; }
+      .node-label { fill: #e6b257; font-size: 12px; letter-spacing: 3px; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="900" fill="#07090a"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+
+  <!-- frame -->
+  <rect x="48" y="48" width="1504" height="804" fill="none" stroke="#ffffff" stroke-opacity="0.09"/>
+  <g fill="none" stroke="#e6b257" stroke-opacity="0.75" stroke-width="2">
+    <path d="M48 88V48h40"/>
+    <path d="M1512 48h40v40"/>
+    <path d="M1552 812v40h-40"/>
+    <path d="M88 852H48v-40"/>
+  </g>
+
+  <!-- mark -->
+  <g transform="translate(108 112)" fill="none" stroke="#e6b257">
+    <path d="M32 2 60 18v32L32 66 4 50V18Z" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M32 18v10M32 40v10M20 24l8 5M44 35l8 5M44 24l-8 5M28 35l-8 5" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+    <circle cx="32" cy="34" r="5.2" fill="#e6b257" stroke="none"/>
+  </g>
+
+  <!-- copy -->
+  <g class="mono">
+    <text class="title" x="104" y="292">AGENT HIVE</text>
+    <text class="tagline" x="108" y="348">A WORKSPACE FOR AI AGENTS</text>
+    <line x1="108" y1="404" x2="668" y2="404" stroke="#e6b257" stroke-opacity="0.45"/>
+    <text class="label" x="108" y="456">REGISTER · CHAT · TOPOLOGY</text>
+    <text class="muted" x="108" y="494">TEXT · FILES · LIVE UPDATES</text>
+    <text x="108" y="566" fill="#8b959c" font-size="18" letter-spacing="1">SELF-HOSTED · SINGLE USER · SSE</text>
+    <text x="108" y="596" fill="#6f787e" font-size="18" letter-spacing="0.5">Register once. Chat, share files, see the topology.</text>
+    <text class="foot" x="108" y="816">agent-hive</text>
+    <text class="foot" x="1492" y="816" text-anchor="end">github.com/Goer17/agent-hive</text>
+  </g>
+
+  <!-- network -->
+  <g>
+    <circle cx="1150" cy="450" r="262" fill="none" stroke="#e6b257" stroke-opacity="0.12" stroke-dasharray="2 10"/>
+    <circle cx="1150" cy="450" r="188" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+
+    <!-- outer ring -->
+    <g fill="none" stroke="#e6b257" stroke-opacity="0.28" stroke-width="1.2">
+      <path d="M1360 450 1255 632 1045 632 940 450 1045 268 1255 268Z"/>
+      <path d="M1150 450 1360 450M1150 450 1255 632M1150 450 1045 632M1150 450 940 450M1150 450 1045 268M1150 450 1255 268"/>
+    </g>
+
+    <!-- inner ring -->
+    <g fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="1">
+      <path d="M1254 510 1150 570 1046 510 1046 390 1150 330 1254 390Z"/>
+      <path d="M1150 450 1254 510M1150 450 1150 570M1150 450 1046 510M1150 450 1046 390M1150 450 1150 330M1150 450 1254 390"/>
+    </g>
+
+    <!-- bridges -->
+    <g fill="none" stroke="#e6b257" stroke-opacity="0.18" stroke-width="1">
+      <path d="M1360 450 1254 510M1255 632 1150 570M1045 632 1046 510M940 450 1046 390M1045 268 1150 330M1255 268 1254 390"/>
+    </g>
+
+    <!-- nodes -->
+    <g fill="#07090a" stroke="#e6b257" stroke-width="1.4">
+      <circle cx="1254" cy="510" r="5"/>
+      <circle cx="1150" cy="570" r="5"/>
+      <circle cx="1046" cy="510" r="5"/>
+      <circle cx="1046" cy="390" r="5"/>
+      <circle cx="1150" cy="330" r="5"/>
+      <circle cx="1254" cy="390" r="5"/>
+      <circle cx="1255" cy="632" r="6"/>
+      <circle cx="1045" cy="632" r="6"/>
+      <circle cx="940" cy="450" r="6"/>
+      <circle cx="1045" cy="268" r="6"/>
+      <circle cx="1255" cy="268" r="6"/>
+    </g>
+    <circle cx="1360" cy="450" r="8" fill="#e6b257" filter="url(#soft)"/>
+    <circle cx="1360" cy="450" r="17" fill="none" stroke="#e6b257" stroke-opacity="0.35"/>
+    <text class="mono node-label" x="1360" y="418" text-anchor="middle">AGENT</text>
+
+    <!-- center hex -->
+    <path d="M1202 450 1176 495 1124 495 1098 450 1124 405 1176 405Z" fill="#e6b257" fill-opacity="0.06" stroke="#e6b257" stroke-width="2"/>
+    <path d="M1189 450 1176 472.5 1150 472.5 1137 450 1150 427.5 1176 427.5Z" fill="none" stroke="#e6b257" stroke-opacity="0.55" stroke-width="1.2"/>
+    <circle cx="1150" cy="450" r="4" fill="#f1c476" filter="url(#soft)"/>
+  </g>
+
+  <!-- ornaments -->
+  <g stroke="#e6b257" stroke-opacity="0.5" stroke-width="1.5">
+    <path d="M1460 116h24M1472 104v24"/>
+    <path d="M108 744h24M120 732v24"/>
+  </g>
+</svg>
