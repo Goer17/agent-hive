@@ -27,6 +27,7 @@ EOF
 target="user"
 text=""
 text_file=""
+text_from_file="0"
 file=""
 
 while [[ $# -gt 0 ]]; do
@@ -68,6 +69,7 @@ fi
 if [[ -n "$text_file" ]]; then
   [[ -f "$text_file" ]] || die "text file not found: $text_file"
   text="$(cat "$text_file")"
+  text_from_file="1"
 fi
 
 if [[ -z "$text" && -z "$file" ]]; then
@@ -86,9 +88,9 @@ assert_contact "$target"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
-# Upload local images referenced by the Markdown and rewrite their links to
-# server URLs. Only absolute paths are touched; remote URLs are left alone.
-if [[ -n "$text" ]]; then
+# Upload local images referenced by the Markdown file and rewrite their links
+# to server URLs. Only --text-file is processed; --text is sent verbatim.
+if [[ "$text_from_file" == "1" && -n "$text" ]]; then
   image_paths="$(printf '%s' "$text" | python3 "$HIVE_PY" md-image-paths)"
   if [[ -n "$image_paths" ]]; then
     image_map="$tmpdir/image-map.json"
