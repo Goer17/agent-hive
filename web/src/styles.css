@@ -850,9 +850,9 @@ a {
 }
 
 .chat-row-read {
-  color: var(--muted-2);
-  font-size: 9px;
-  letter-spacing: 0.02em;
+  color: var(--info);
+  font-size: 10.5px;
+  letter-spacing: 0.01em;
 }
 
 .chat-row-read.is-read {
