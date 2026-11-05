@@ -1580,6 +1580,15 @@ a {
   color: var(--accent);
 }
 
+.composer-file-thumb {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
 .composer-file-name {
   overflow: hidden;
   max-width: 280px;

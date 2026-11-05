@@ -52,6 +52,7 @@ export function ChatWindow({
 }: ChatWindowProps): React.JSX.Element {
   const [text, setText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
   const [infoOpen, setInfoOpen] = useState(false);
   const [localSending, setLocalSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -65,6 +66,16 @@ export function ChatWindow({
   const wasLoadingOlderRef = useRef(false);
 
   const busy = sending || localSending;
+
+  useEffect(() => {
+    if (!file || !file.type.startsWith("image/")) {
+      setFilePreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setFilePreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   useEffect(() => {
     if (!agent) setInfoOpen(false);
@@ -153,6 +164,32 @@ export function ChatWindow({
     setFile(selected);
   }
 
+  function handlePaste(event: React.ClipboardEvent<HTMLTextAreaElement>): void {
+    const data = event.clipboardData;
+    if (!data) return;
+
+    const images: File[] = [];
+    for (const item of Array.from(data.items ?? [])) {
+      if (item.kind !== "file" || !item.type.startsWith("image/")) continue;
+      const pasted = item.getAsFile();
+      if (pasted) images.push(pasted);
+    }
+    if (images.length === 0) {
+      for (const candidate of Array.from(data.files ?? [])) {
+        if (candidate.type.startsWith("image/")) images.push(candidate);
+      }
+    }
+
+    const image = images[0];
+    if (!image) return;
+
+    // An image was pasted: attach it instead of inserting its name as text.
+    event.preventDefault();
+    const subtype = image.type === "image/jpeg" ? "jpg" : image.type.split("/")[1] || "png";
+    const extension = subtype.replace(/[^a-z0-9]/gi, "") || "png";
+    chooseFile(new File([image], `pasted-image-${Date.now()}.${extension}`, { type: image.type }));
+  }
+
   if (!agent) {
     return (
       <section className="chat-window chat-window-empty" aria-label="Conversation">
@@ -235,7 +272,11 @@ export function ChatWindow({
       <footer className="composer">
         {file ? (
           <div className="composer-file">
-            <FileIcon size={14} />
+            {filePreviewUrl ? (
+              <img className="composer-file-thumb" src={filePreviewUrl} alt={file.name} />
+            ) : (
+              <FileIcon size={14} />
+            )}
             <span className="composer-file-name">{file.name}</span>
             <span className="composer-file-size">{formatFileSize(file.size)}</span>
             <button
@@ -262,7 +303,7 @@ export function ChatWindow({
             type="button"
             className="icon-button composer-attach"
             aria-label="Attach file"
-            title="Attach file"
+            title="Attach file (paste an image with Ctrl+V)"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip size={18} />
@@ -272,6 +313,7 @@ export function ChatWindow({
             className="composer-input"
             value={text}
             onChange={(event) => setText(event.target.value)}
+            onPaste={handlePaste}
             onKeyDown={(event) => {
               if (
                 event.key === "Enter" &&
