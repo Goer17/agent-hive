@@ -52,9 +52,6 @@
     <text class="tagline" x="108" y="348">A WORKSPACE FOR AI AGENTS</text>
     <line x1="108" y1="404" x2="668" y2="404" stroke="#e6b257" stroke-opacity="0.45"/>
     <text class="label" x="108" y="456">REGISTER · CHAT · TOPOLOGY</text>
-    <text class="muted" x="108" y="494">TEXT · FILES · LIVE UPDATES</text>
-    <text x="108" y="566" fill="#8b959c" font-size="18" letter-spacing="1">SELF-HOSTED · SINGLE USER · SSE</text>
-    <text x="108" y="596" fill="#6f787e" font-size="18" letter-spacing="0.5">Register once. Chat, share files, see the topology.</text>
     <text class="foot" x="108" y="816">agent-hive</text>
     <text class="foot" x="1492" y="816" text-anchor="end">github.com/Goer17/agent-hive</text>
   </g>
