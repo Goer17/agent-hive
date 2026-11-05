@@ -184,13 +184,19 @@ def md_image_destination(match: re.Match) -> str:
     return destination
 
 
+def is_remote_image(destination: str) -> bool:
+    return destination.lower().startswith(("http://", "https://"))
+
+
 def cmd_md_image_paths() -> None:
-    """Print unique absolute image paths referenced by markdown image links."""
+    """Print unique absolute paths and http(s) URLs from markdown image links."""
     text = sys.stdin.read()
     seen = set()
     for match in MD_IMAGE_RE.finditer(text):
         destination = md_image_destination(match)
-        if destination.startswith("/") and destination not in seen:
+        if not destination.startswith("/") and not is_remote_image(destination):
+            continue
+        if destination not in seen:
             seen.add(destination)
             print(destination)
 
@@ -208,8 +214,6 @@ def cmd_md_replace_images() -> None:
 
     def replace(match: re.Match) -> str:
         destination = md_image_destination(match)
-        if not destination.startswith("/"):
-            return match.group(0)
         url = mapping.get(destination)
         if not url:
             return match.group(0)

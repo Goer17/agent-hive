@@ -195,9 +195,10 @@ Send to the user:
 ```
 
 `--text` and `--text-file` are mutually exclusive. With `--text-file` the file is
-read as Markdown; image links to absolute local paths are uploaded to the
-server first, then rewritten to server-served URLs (`/api/files/<id>`) in the
-message that is sent. Paths with spaces can be wrapped in angle brackets:
+read as Markdown; image links to absolute local paths or http(s) URLs are
+uploaded to the server first (remote images are downloaded), then rewritten to
+server-served URLs (`/api/files/<id>`) in the message that is sent. Paths with
+spaces can be wrapped in angle brackets:
 `![diagram](</tmp/my diagram.png>)`.
 
 Send to a peer agent:

@@ -13,9 +13,10 @@ Send a message and/or one file to the user or to a connected agent. TARGET
 defaults to "user". Files are limited to 50 MB.
 
 --text and --text-file are mutually exclusive. With --text-file the file is read
-as Markdown; image links that point at absolute local paths are uploaded to the
-server first, then rewritten to server-served URLs (/api/files/<id>) before the
-message is sent. Paths containing spaces can use angle brackets:
+as Markdown; image links that point at absolute local paths or http(s) URLs are
+uploaded to the server first (remote images are downloaded), then rewritten to
+server-served URLs (/api/files/<id>) before the message is sent. Paths
+containing spaces can use angle brackets:
   ![alt](</absolute/path with spaces.png>)
 
 Environment:
@@ -88,27 +89,56 @@ assert_contact "$target"
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 
-# Upload local images referenced by the Markdown file and rewrite their links
-# to server URLs. Only --text-file is processed; --text is sent verbatim.
+# Upload local and remote images referenced by the Markdown file and rewrite
+# their links to server URLs. Only --text-file is processed; --text is sent
+# verbatim.
 if [[ "$text_from_file" == "1" && -n "$text" ]]; then
   image_paths="$(printf '%s' "$text" | python3 "$HIVE_PY" md-image-paths)"
   if [[ -n "$image_paths" ]]; then
     image_map="$tmpdir/image-map.json"
     printf '{}' >"$image_map"
 
-    while IFS= read -r image_path; do
-      [[ -n "$image_path" ]] || continue
-      [[ "$image_path" == /* ]] || die "image path must be absolute: $image_path"
-      [[ -f "$image_path" ]] || die "image not found: $image_path"
+    remote_index="0"
+    while IFS= read -r image_ref; do
+      [[ -n "$image_ref" ]] || continue
 
-      extension="$(printf '%s' "${image_path##*.}" | tr '[:upper:]' '[:lower:]')"
-      case "$extension" in
-        png|jpg|jpeg|gif|webp|avif) ;;
-        *) die "unsupported image type (use png/jpg/jpeg/gif/webp/avif): $image_path" ;;
-      esac
+      upload_path=""
+      extension=""
+      if [[ "$image_ref" == http://* || "$image_ref" == https://* ]]; then
+        remote_index=$((remote_index + 1))
+        download_path="$tmpdir/remote-$remote_index"
+        if ! content_type="$(
+          curl -L -sS --fail --connect-timeout 10 --max-time 60 --max-filesize "$MAX_FILE_SIZE" \
+            -o "$download_path" -w '%{content_type}' "$image_ref"
+        )"; then
+          die "failed to download image: $image_ref"
+        fi
+        case "$content_type" in
+          image/png*) extension="png" ;;
+          image/jpeg*) extension="jpg" ;;
+          image/gif*) extension="gif" ;;
+          image/webp*) extension="webp" ;;
+          image/avif*) extension="avif" ;;
+          *) die "unsupported remote image type (${content_type:-unknown}): $image_ref" ;;
+        esac
+        download_size="$(wc -c <"$download_path" | tr -d '[:space:]')"
+        [[ "$download_size" -le "$MAX_FILE_SIZE" ]] || die "remote image exceeds the 50 MB limit: $image_ref"
+        upload_path="$tmpdir/remote-image-$remote_index.$extension"
+        mv "$download_path" "$upload_path"
+      else
+        [[ "$image_ref" == /* ]] || die "image path must be absolute or an http(s) URL: $image_ref"
+        [[ -f "$image_ref" ]] || die "image not found: $image_ref"
 
-      image_size="$(wc -c <"$image_path" | tr -d '[:space:]')"
-      [[ "$image_size" -le "$MAX_FILE_SIZE" ]] || die "image exceeds the 50 MB limit: $image_path"
+        extension="$(printf '%s' "${image_ref##*.}" | tr '[:upper:]' '[:lower:]')"
+        case "$extension" in
+          png|jpg|jpeg|gif|webp|avif) ;;
+          *) die "unsupported image type (use png/jpg/jpeg/gif/webp/avif): $image_ref" ;;
+        esac
+
+        image_size="$(wc -c <"$image_ref" | tr -d '[:space:]')"
+        [[ "$image_size" -le "$MAX_FILE_SIZE" ]] || die "image exceeds the 50 MB limit: $image_ref"
+        upload_path="$image_ref"
+      fi
 
       upload_response_file="$tmpdir/upload.json"
       if ! upload_status="$(
@@ -117,7 +147,7 @@ if [[ "$text_from_file" == "1" && -n "$text" ]]; then
           -X POST \
           -H "X-Hive-Session-Id: $HIVE_SESSION_ID" \
           -H "X-Hive-Session-Pwd: $HIVE_SESSION_PWD" \
-          -F "file=@${image_path}" \
+          -F "file=@${upload_path}" \
           "$SERVER_URL/api/agent/files"
       )"; then
         die "unable to reach $SERVER_URL"
@@ -130,9 +160,9 @@ if [[ "$text_from_file" == "1" && -n "$text" ]]; then
 
       uploaded_file="$(json_field file "$upload_response")"
       image_url="$(json_field url "$uploaded_file")"
-      [[ -n "$image_url" ]] || die "server did not return an image URL for $image_path"
+      [[ -n "$image_url" ]] || die "server did not return an image URL for $image_ref"
 
-      python3 "$HIVE_PY" md-add-image "$image_map" "$image_path" "$image_url"
+      python3 "$HIVE_PY" md-add-image "$image_map" "$image_ref" "$image_url"
     done <<<"$image_paths"
 
     text="$(printf '%s' "$text" | HIVE_IMAGE_MAP_FILE="$image_map" python3 "$HIVE_PY" md-replace-images)"
