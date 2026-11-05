@@ -259,11 +259,14 @@ export function deletePairConversation(first: string, second: string): number {
   return deleteConversation(pairConversation(first, second));
 }
 
-export function fileById(fileId: string): { message: MessageRecord; file: StoredFile } | null {
+export function fileById(
+  fileId: string,
+): { message: MessageRecord | null; file: StoredFile } | null {
   for (const message of store.data.messages) {
     if (message.file?.id === fileId) return { message, file: message.file };
   }
-  return null;
+  const upload = store.data.uploads.find((file) => file.id === fileId);
+  return upload ? { message: null, file: upload } : null;
 }
 
 export function agentCanAccessFile(agentId: string, message: MessageRecord): boolean {

@@ -14,6 +14,7 @@ function freshStore(): StoreData {
     accessTokenHash: null,
     agents: [],
     messages: [],
+    uploads: [],
     edges: [],
     categories: [
       { id: UNCATEGORIZED_ID, name: "Uncategorized", order: 0, locked: true },
@@ -53,6 +54,7 @@ function loadStore(): StoreData {
 
   data.agents ??= [];
   data.messages ??= [];
+  data.uploads ??= [];
   data.edges ??= [];
   data.categories ??= [];
   data.tokens ??= [];

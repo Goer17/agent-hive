@@ -80,6 +80,7 @@ export interface StoreData {
   accessTokenHash: string | null;
   agents: AgentRecord[];
   messages: MessageRecord[];
+  uploads: StoredFile[];
   edges: EdgeRecord[];
   categories: CategoryRecord[];
   tokens: TokenRecord[];

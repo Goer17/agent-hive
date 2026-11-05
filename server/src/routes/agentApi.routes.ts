@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { z } from "zod";
-import { clampInt, HttpError, queryString } from "../lib/http.js";
+import { badRequest, clampInt, HttpError, queryString } from "../lib/http.js";
 import { events } from "../lib/events.js";
-import { sendStoredFile } from "../lib/files.js";
+import { publicFile, sendStoredFile } from "../lib/files.js";
 import { discardUpload, fileFromRequest } from "../lib/uploads.js";
 import { store } from "../store/store.js";
 import { requireAgentAuth, type AgentRequest } from "../middleware/auth.js";
@@ -258,10 +258,23 @@ agentApiRouter.post(
   },
 );
 
+agentApiRouter.post("/files", upload.single("file"), (request, response, next) => {
+  try {
+    const file = fileFromRequest(request);
+    if (!file) badRequest("A file is required.");
+    store.data.uploads.push(file);
+    store.save();
+    response.status(201).json({ file: publicFile(file) });
+  } catch (error) {
+    discardUpload(request);
+    next(error);
+  }
+});
+
 agentApiRouter.get("/files/:id", (request, response) => {
   const agent = (request as unknown as AgentRequest).agent;
   const found = fileById(request.params.id);
-  if (!found || !agentCanAccessFile(agent.sessionId, found.message)) {
+  if (!found || (found.message && !agentCanAccessFile(agent.sessionId, found.message))) {
     response.status(404).json({ error: "File not found." });
     return;
   }

@@ -171,6 +171,67 @@ def cmd_update_seen() -> None:
     os.chmod(tmp, 0o600)
     os.replace(tmp, target)
 
+
+MD_IMAGE_RE = re.compile(
+    r"!\[([^\]]*)\]\(\s*(<[^>]+>|[^)\s]+)(\s+(?:\"[^\"]*\"|'[^']*'))?\s*\)"
+)
+
+
+def md_image_destination(match: re.Match) -> str:
+    destination = match.group(2)
+    if destination.startswith("<") and destination.endswith(">"):
+        destination = destination[1:-1]
+    return destination
+
+
+def cmd_md_image_paths() -> None:
+    """Print unique absolute image paths referenced by markdown image links."""
+    text = sys.stdin.read()
+    seen = set()
+    for match in MD_IMAGE_RE.finditer(text):
+        destination = md_image_destination(match)
+        if destination.startswith("/") and destination not in seen:
+            seen.add(destination)
+            print(destination)
+
+
+def cmd_md_replace_images() -> None:
+    """Rewrite absolute markdown image paths using the path-to-url map file."""
+    text = sys.stdin.read()
+    map_path = os.environ.get("HIVE_IMAGE_MAP_FILE", "")
+    mapping = {}
+    if map_path:
+        try:
+            mapping = json.loads(Path(map_path).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            fail(f"unable to read image map: {map_path}")
+
+    def replace(match: re.Match) -> str:
+        destination = md_image_destination(match)
+        if not destination.startswith("/"):
+            return match.group(0)
+        url = mapping.get(destination)
+        if not url:
+            return match.group(0)
+        alt = match.group(1)
+        title = match.group(3) or ""
+        return f"![{alt}]({url}{title})"
+
+    print(MD_IMAGE_RE.sub(replace, text), end="")
+
+
+def cmd_md_add_image() -> None:
+    """Record path -> url in the JSON map used by md-replace-images."""
+    if len(sys.argv) != 5:
+        fail("usage: md-add-image MAP_FILE PATH URL")
+    map_path, key, value = sys.argv[2], sys.argv[3], sys.argv[4]
+    try:
+        mapping = json.loads(Path(map_path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        mapping = {}
+    mapping[key] = value
+    Path(map_path).write_text(json.dumps(mapping, separators=(",", ":")), encoding="utf-8")
+
 PAGE_LIMIT = 200
 
 
@@ -412,6 +473,12 @@ def main() -> None:
         cmd_filter_unseen()
     elif command == "update-seen":
         cmd_update_seen()
+    elif command == "md-image-paths":
+        cmd_md_image_paths()
+    elif command == "md-replace-images":
+        cmd_md_replace_images()
+    elif command == "md-add-image":
+        cmd_md_add_image()
     elif command == "fetch-unread":
         cmd_fetch_unread()
     elif command == "make-read-json":

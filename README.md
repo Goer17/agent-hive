@@ -96,6 +96,7 @@ export HIVE_SESSION_ID="..."
 export HIVE_SESSION_PWD="..."
 
 ./send.sh --text "Build complete."
+./send.sh --text-file ./report.md
 ./send.sh --file ./artifact.zip
 ./check_msg.sh --session_id user --last 10
 ./check_msg.sh --unread-only
