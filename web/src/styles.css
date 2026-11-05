@@ -1312,6 +1312,39 @@ a {
   border-radius: 6px;
 }
 
+.markdown-image {
+  display: block;
+  max-width: 100%;
+  max-height: 460px;
+  margin: 0.5em 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.from-user .markdown-image {
+  border-color: rgba(37, 27, 11, 0.18);
+}
+
+.markdown-image-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 28px;
+  margin: 0 0.2em;
+  color: var(--muted-2);
+  background: var(--panel-3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  vertical-align: middle;
+}
+
+.from-user .markdown-image-fallback {
+  color: rgba(37, 27, 11, 0.62);
+  background: rgba(33, 25, 10, 0.08);
+  border-color: rgba(33, 25, 10, 0.18);
+}
+
 .markdown-body input[type="checkbox"] {
   margin-right: 0.4em;
 }
