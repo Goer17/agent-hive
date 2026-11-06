@@ -62,8 +62,11 @@ wait_msg.sh --timeout 0 --interval 2     # blocks; exits 0 on new unread
 - `wait_msg.sh` does not mark messages read, and it remembers the ids it already
   reported in `<workspace>/.agent-hive/<session_id>/wait-seen/<target>`, so
   restarting it does not fire again for the same backlog.
-- Use `--session_id user` to watch only the user, or omit it to watch every
-  conversation.
+- After a wake-up, read every conversation that has unread messages:
+  `check_msg.sh --unread-only` covers the user, and `check_msg.sh --unread-only
+  --session_id <peer-id>` covers each peer. `listen.sh` does both in one call.
+- `wait_msg.sh` always watches every conversation (the user plus all connected
+  peers); it no longer takes `--session_id`.
 - Example with pi and `pi-bg-jobs`:
 
 ```text
@@ -295,7 +298,6 @@ be opened or read directly.
 
 ```bash
 ./src/wait_msg.sh
-./src/wait_msg.sh --session_id "<peer-session-id>"
 ./src/wait_msg.sh --timeout 120 --interval 2
 ```
 
@@ -313,9 +315,9 @@ background waiter can be restarted without firing repeatedly for the same
 backlog. The file is replaced on each report and drops ids once the messages are
 read. This does not mark anything read.
 
-- Without `--session_id`, every conversation is watched.
-- `--session_id user` watches the user conversation; a peer session id watches
-  only that connected agent.
+- Every conversation is watched: the user plus each connected agent.
+- There is no `--session_id` option; use `check_msg.sh --session_id` to read a
+  specific conversation after a wake-up.
 - `--timeout` is the maximum wait in seconds; `0` (the default) waits forever.
 - `--interval` is the polling interval in seconds, from 1 to 60; the default is 2.
 
@@ -333,7 +335,6 @@ especially when the harness supports background wake-up.
 
 ```bash
 ./src/listen.sh                      # wait for the next batch, print it, exit
-./src/listen.sh --session_id "<peer-session-id>"
 ./src/listen.sh --timeout 900        # give up after 15 minutes (exit 124)
 ./src/listen.sh --follow             # keep listening and print every batch
 ```
@@ -343,9 +344,9 @@ especially when the harness supports background wake-up.
   for a human-observed terminal or an explicit handler; the `wait_msg.sh` waiter
   patterns above are the recommended way for interactive agents.
 - `--interval` controls how often the server is asked (default 1s).
-- Omit `--session_id` to watch every conversation; `--all` says so explicitly.
-  Watch-all reads each conversation (the user plus every connected peer) and
-  prints a `== <peer session id> ==` header before a peer's batch.
+- Every conversation is watched (the user plus every connected peer), and a
+  `== <peer session id> ==` header is printed before a peer's batch. `--all` is
+  accepted for clarity; `--session_id` is deprecated and ignored.
 - `check_msg.sh --quiet` suppresses the "No unread messages." line, which is what
   the watch-all loop uses to stay silent about conversations that had nothing.
 - Exit status is `0` when a batch was printed (or `--follow` was interrupted)

@@ -7,15 +7,15 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: listen.sh [--session_id TARGET] [--timeout SECONDS] [--interval SECONDS] [--follow]
+Usage: listen.sh [--timeout SECONDS] [--interval SECONDS] [--follow]
 
 Wait until unread messages exist, print only the new ones (marking just those
-read), then exit 0 so the caller can react. TARGET defaults to "user"; omit
---session_id, or pass --all, to watch every conversation.
+read), then exit 0 so the caller can react. Every conversation is watched (the
+user plus all connected agents).
 
 Options:
-  --session_id   Watch one conversation (default: user)
-  --all          Watch every conversation
+  --session_id   Deprecated and ignored; every conversation is watched anyway.
+  --all          Accepted for clarity; this is the default.
   --timeout      Maximum wait in seconds; 0 waits forever (default: 0)
   --interval     Poll interval in seconds, 1 to 60 (default: 1)
   --follow       Keep listening after the first batch and print each new batch
@@ -34,7 +34,7 @@ EOF
 }
 
 target="user"
-watch_all="0"
+watch_all="1"
 timeout="0"
 interval="1"
 once="1"
@@ -43,9 +43,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --session_id)
       [[ $# -ge 2 ]] || die "--session_id requires a value"
-      target="$2"
-      watch_all="0"
       shift 2
+      printf 'warning: --session_id is ignored; listen.sh watches every conversation.\n' >&2
       ;;
     --all)
       watch_all="1"
@@ -130,9 +129,6 @@ while true; do
   fi
 
   wait_args=(--interval "$interval" --timeout "$remaining")
-  if [[ "$watch_all" != "1" ]]; then
-    wait_args+=(--session_id "$target")
-  fi
 
   set +e
   "$SCRIPT_DIR/wait_msg.sh" "${wait_args[@]}" 2>"$wait_err"

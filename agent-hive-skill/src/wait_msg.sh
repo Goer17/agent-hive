@@ -7,12 +7,12 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: wait_msg.sh [--session_id TARGET] [--timeout SECONDS] [--interval SECONDS]
+Usage: wait_msg.sh [--timeout SECONDS] [--interval SECONDS]
 
 Wait until *new* unread messages exist, print who sent the latest one and the
-total unread count, then exit. Without --session_id, all conversations are
-watched. TARGET restricts the wait to the user or a connected agent. This
-command is silent while waiting and does not mark messages as read.
+total unread count, then exit. Every conversation is watched (the user plus all
+connected agents); there is no single-conversation mode. This command is silent
+while waiting and does not mark messages as read.
 
 wait_msg.sh remembers the ids of unread messages it has already reported in
 <workspace>/.agent-hive/<session_id>/wait-seen/<target>. A later run keeps
@@ -34,17 +34,11 @@ Environment:
 EOF
 }
 
-target=""
 timeout="0"
 interval="2"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --session_id)
-      [[ $# -ge 2 ]] || die "--session_id requires a value"
-      target="$2"
-      shift 2
-      ;;
     --timeout)
       [[ $# -ge 2 ]] || die "--timeout requires a value"
       timeout="$2"
@@ -72,14 +66,6 @@ done
 load_session
 
 unread_path="/api/agent/unread"
-watch_all="0"
-if [[ -n "$target" ]]; then
-  assert_contact "$target"
-  encoded_target="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$target")"
-  unread_path="/api/agent/unread?with=$encoded_target"
-else
-  watch_all="1"
-fi
 
 # wait_msg.sh tracks the ids it has already reported so restarting a background
 # waiter does not fire again for the same unread backlog.
@@ -123,14 +109,9 @@ while true; do
     fi
 
     if [[ "$stale" == "0" ]]; then
-      # Conversations to inspect: the requested target, or the user plus every
-      # connected peer when watching all conversations.
-      if [[ "$watch_all" == "1" ]]; then
-        contacts_json="$(http_get "/api/agent/contacts")"
-        target_list="user"$'\n'"$(printf '%s' "$contacts_json" | python3 "$HIVE_PY" contact-ids)"
-      else
-        target_list="$target"
-      fi
+      # Wait on every conversation: the user plus each connected peer.
+      contacts_json="$(http_get "/api/agent/contacts")"
+      target_list="user"$'\n'"$(printf '%s' "$contacts_json" | python3 "$HIVE_PY" contact-ids)"
 
       found_new="0"
       while IFS= read -r conversation; do
