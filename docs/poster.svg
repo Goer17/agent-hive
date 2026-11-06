@@ -41,7 +41,7 @@
   <!-- mark -->
   <g transform="translate(108 112)" fill="none" stroke="#e6b257">
     <path d="M32 2 60 18v32L32 66 4 50V18Z" stroke-width="2.4" stroke-linejoin="round"/>
-    <path d="M32 18v10M32 40v10M20 24l8 5M44 35l8 5M44 24l-8 5M28 35l-8 5" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
+    <path d="M32 34 32 10M32 34 55 21M32 34 55 47M32 34 32 58M32 34 9 47M32 34 9 21" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>
     <circle cx="32" cy="34" r="5.2" fill="#e6b257" stroke="none"/>
   </g>
 
