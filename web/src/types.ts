@@ -63,6 +63,7 @@ export interface TopologyEdge {
   b: string;
   createdAt: string;
   messageCount: number;
+  unreadCount: number;
 }
 
 export interface Category {

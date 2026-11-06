@@ -45,8 +45,32 @@ export function TopologyPage(): React.JSX.Element {
   useSseEvent((event) => {
     if (event.type === "topology" || event.type === "agents") {
       void refresh();
+      return;
+    }
+    if (event.type === "message") {
+      const agentIds = Array.isArray(event.data.agentIds)
+        ? (event.data.agentIds as string[])
+        : [];
+      // Agent-to-agent conversations affect edge badges; user chats do not.
+      if (agentIds.length === 2) void refresh();
     }
   });
+
+  function handleEdgeRead(edgeId: string): void {
+    setTopology((current) =>
+      current
+        ? {
+            ...current,
+            edges: current.edges.map((edge) =>
+              edge.id === edgeId ? { ...edge, unreadCount: 0 } : edge,
+            ),
+          }
+        : current,
+    );
+    void api.markEdgeRead(edgeId).catch(() => {
+      // The badge clears locally; the next topology refresh reconciles.
+    });
+  }
 
   async function connect(first: string, second: string): Promise<boolean> {
     try {
@@ -187,6 +211,7 @@ export function TopologyPage(): React.JSX.Element {
             agents={topology?.agents ?? []}
             onClose={() => setSelectedEdgeId(null)}
             onDeleteRequest={(edge) => setConfirmEdge(edge)}
+            onRead={handleEdgeRead}
           />
         ) : null}
       </section>

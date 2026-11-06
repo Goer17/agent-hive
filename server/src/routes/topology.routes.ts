@@ -8,6 +8,7 @@ import { listPairMessages, pairConversation } from "../services/messages.service
 import {
   createEdge,
   deleteEdge,
+  markEdgeRead,
   topologyPayload,
   updatePositions,
 } from "../services/topology.service.js";
@@ -43,6 +44,12 @@ topologyRouter.delete("/edges/:id", (request, response) => {
   });
   events.emit({ type: "topology", data: {} });
   response.json({ deleted: true });
+});
+
+topologyRouter.post("/edges/:id/read", (request, response) => {
+  const edge = markEdgeRead(request.params.id);
+  events.emit({ type: "topology", data: {} });
+  response.json({ ok: true, edgeId: edge.id, unreadCount: 0 });
 });
 
 topologyRouter.get("/edges/:id/messages", (request, response) => {

@@ -27,6 +27,7 @@ export interface TopologyEdge {
   b: string;
   createdAt: string;
   messageCount: number;
+  unreadCount: number;
 }
 
 export interface TopologyPayload {
@@ -53,12 +54,23 @@ export function topologyPayload(): TopologyPayload {
     }))
     .sort((left, right) => left.name.localeCompare(right.name));
 
-  const edges = store.data.edges.map((edge) => ({
-    ...edge,
-    messageCount: store.data.messages.filter(
-      (message) => message.conversation === pairConversation(edge.a, edge.b),
-    ).length,
-  }));
+  const edges = store.data.edges.map((edge) => {
+    const conversation = pairConversation(edge.a, edge.b);
+    const pairMessages = store.data.messages.filter(
+      (message) => message.conversation === conversation,
+    );
+    const cursor = store.data.edgeReads[edge.id];
+    let unreadCount = pairMessages.length;
+    if (cursor) {
+      const index = pairMessages.findIndex((message) => message.id === cursor);
+      unreadCount = index >= 0 ? pairMessages.length - index - 1 : pairMessages.length;
+    }
+    return {
+      ...edge,
+      messageCount: pairMessages.length,
+      unreadCount,
+    };
+  });
 
   return { agents, edges, categories: listCategories() };
 }
@@ -91,8 +103,28 @@ export function deleteEdge(edgeId: string): EdgeRecord {
   const edge = store.data.edges.find((item) => item.id === edgeId);
   if (!edge) notFound("Connection not found.");
   store.data.edges = store.data.edges.filter((item) => item.id !== edgeId);
+  delete store.data.edgeReads[edgeId];
   store.save();
   deletePairConversation(edge.a, edge.b);
+  return edge;
+}
+
+export function markEdgeRead(edgeId: string): EdgeRecord {
+  const edge = store.data.edges.find((item) => item.id === edgeId);
+  if (!edge) notFound("Connection not found.");
+
+  const conversation = pairConversation(edge.a, edge.b);
+  for (let index = store.data.messages.length - 1; index >= 0; index -= 1) {
+    const message = store.data.messages[index];
+    if (message?.conversation === conversation) {
+      store.data.edgeReads[edgeId] = message.id;
+      store.save();
+      return edge;
+    }
+  }
+
+  delete store.data.edgeReads[edgeId];
+  store.save();
   return edge;
 }
 

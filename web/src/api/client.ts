@@ -107,6 +107,11 @@ export const api = {
     request<{ deleted: boolean }>(`/api/topology/edges/${id}`, { method: "DELETE" }),
   edgeMessages: (id: string) =>
     request<EdgeMessagesResponse>(`/api/topology/edges/${id}/messages`),
+  markEdgeRead: (id: string) =>
+    request<{ ok: boolean; edgeId: string; unreadCount: number }>(
+      `/api/topology/edges/${id}/read`,
+      { method: "POST" },
+    ),
   updatePositions: (positions: Record<string, { x: number; y: number }>) =>
     request<{ ok: boolean }>("/api/topology/positions", {
       method: "PATCH",

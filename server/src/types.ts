@@ -82,6 +82,8 @@ export interface StoreData {
   messages: MessageRecord[];
   uploads: StoredFile[];
   edges: EdgeRecord[];
+  edgeReads: Record<string, string>;
+  edgeReadsMigrated: boolean;
   categories: CategoryRecord[];
   tokens: TokenRecord[];
   usedAgentNames: string[];

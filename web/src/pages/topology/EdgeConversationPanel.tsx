@@ -13,6 +13,7 @@ interface EdgeConversationPanelProps {
   agents: TopologyAgent[];
   onClose: () => void;
   onDeleteRequest: (edge: TopologyEdge) => void;
+  onRead?: (edgeId: string) => void;
 }
 
 export function EdgeConversationPanel({
@@ -20,11 +21,13 @@ export function EdgeConversationPanel({
   agents,
   onClose,
   onDeleteRequest,
+  onRead,
 }: EdgeConversationPanelProps): React.JSX.Element {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef(0);
+  const markedRef = useRef("");
 
   const first = agents.find((agent) => agent.sessionId === edge.a);
   const second = agents.find((agent) => agent.sessionId === edge.b);
@@ -69,6 +72,15 @@ export function EdgeConversationPanel({
       void load();
     }
   });
+
+  useEffect(() => {
+    const latest = messages[messages.length - 1];
+    if (!latest) return;
+    const key = `${edge.id}:${latest.id}`;
+    if (markedRef.current === key) return;
+    markedRef.current = key;
+    onRead?.(edge.id);
+  }, [edge.id, messages, onRead]);
 
   useLayoutEffect(() => {
     const element = scrollRef.current;

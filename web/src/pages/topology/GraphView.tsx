@@ -342,6 +342,11 @@ export function GraphView({
               const active = selectedEdgeId === edge.id || hoveredEdgeId === edge.id;
               const midX = (first.x + second.x) / 2;
               const midY = (first.y + second.y) / 2;
+              const dx = second.x - first.x;
+              const dy = second.y - first.y;
+              const length = Math.hypot(dx, dy) || 1;
+              const badgeX = midX - (dy / length) * 16;
+              const badgeY = midY + (dx / length) * 16;
               return (
                 <g key={edge.id} className="graph-edge">
                   <line
@@ -352,6 +357,14 @@ export function GraphView({
                     className={`edge-line${active ? " is-active" : ""}`}
                   />
                   <circle cx={midX} cy={midY} r="3.2" className={`edge-dot${active ? " is-active" : ""}`} />
+                  {edge.unreadCount > 0 ? (
+                    <g className="edge-badge" pointerEvents="none">
+                      <circle cx={badgeX} cy={badgeY} r="10" />
+                      <text x={badgeX} y={badgeY} textAnchor="middle" dominantBaseline="central">
+                        {edge.unreadCount > 99 ? "99+" : edge.unreadCount}
+                      </text>
+                    </g>
+                  ) : null}
                   <line
                     x1={first.x}
                     y1={first.y}

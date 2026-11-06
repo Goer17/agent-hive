@@ -16,6 +16,8 @@ function freshStore(): StoreData {
     messages: [],
     uploads: [],
     edges: [],
+    edgeReads: {},
+    edgeReadsMigrated: true,
     categories: [
       { id: UNCATEGORIZED_ID, name: "Uncategorized", order: 0, locked: true },
     ],
@@ -56,6 +58,7 @@ function loadStore(): StoreData {
   data.messages ??= [];
   data.uploads ??= [];
   data.edges ??= [];
+  data.edgeReads ??= {};
   data.categories ??= [];
   data.tokens ??= [];
   data.usedAgentNames ??= [];
@@ -90,6 +93,25 @@ function loadStore(): StoreData {
       locked: true,
     });
   }
+
+  // One-time migration: existing edge conversations should not suddenly show
+  // as unread. Mark each edge as read up to its newest message; later messages
+  // are counted normally.
+  if (!data.edgeReadsMigrated) {
+    for (const edge of data.edges) {
+      const conversation = `p:${[edge.a, edge.b].sort().join(":")}`;
+      for (let index = data.messages.length - 1; index >= 0; index -= 1) {
+        const message = data.messages[index];
+        if (message?.conversation === conversation) {
+          data.edgeReads[edge.id] = message.id;
+          break;
+        }
+      }
+    }
+    data.edgeReadsMigrated = true;
+    writeStore(data);
+  }
+
   return data;
 }
 
