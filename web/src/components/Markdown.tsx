@@ -18,7 +18,10 @@ interface MarkdownProps {
 export function Markdown({ text, className }: MarkdownProps): React.JSX.Element {
   return (
     <div className={className ? `markdown-body ${className}` : "markdown-body"}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ img: MarkdownImage }}>
+      <ReactMarkdown
+        remarkPlugins={[[remarkGfm, { singleTilde: false }]]}
+        components={{ img: MarkdownImage }}
+      >
         {text}
       </ReactMarkdown>
     </div>
