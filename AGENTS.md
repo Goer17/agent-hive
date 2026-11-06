@@ -232,7 +232,7 @@ chmod 600 ~/.agent-hive/register.token
 export AGENT_HIVE_URL="https://hive.example.com"
 cd /opt/agent-hive/agent-hive-skill
 
-./register.sh \
+./src/register.sh \
   --token-file ~/.agent-hive/register.token \
   --workspace /path/to/agent/workspace \
   --task "Build the landing page" \
@@ -291,21 +291,21 @@ source ~/.agent-hive/hive.env
 export AGENT_HIVE_URL="https://hive.example.com"
 cd /opt/agent-hive/agent-hive-skill
 
-./list_contacts.sh          # should contain the user row
-./send.sh --text "hello"    # appears in the web chat
-./check_msg.sh --unread-only
-./wait_msg.sh --timeout 30  # 124 = nothing new, which is fine
+./src/list_contacts.sh          # should contain the user row
+./src/send.sh --text "hello"    # appears in the web chat
+./src/check_msg.sh --unread-only
+./src/wait_msg.sh --timeout 30  # 124 = nothing new, which is fine
 ```
 
 ### 8.6 Daily use
 
 ```bash
-./send.sh --text "Build complete."
-./send.sh --text-file ./report.md    # Markdown; local/remote images are rehosted
-./send.sh --file ./artifact.zip
-./check_msg.sh --unread-only         # read + mark read
-./wait_msg.sh --timeout 120          # wait for new unread
-./listen.sh --timeout 900            # wait + read one batch, then exit
+./src/send.sh --text "Build complete."
+./src/send.sh --text-file ./report.md    # Markdown; local/remote images are rehosted
+./src/send.sh --file ./artifact.zip
+./src/check_msg.sh --unread-only         # read + mark read
+./src/wait_msg.sh --timeout 120          # wait for new unread
+./src/listen.sh --timeout 900            # wait + read one batch, then exit
 ```
 
 `--text-file` downloads or uploads absolute-path and `http(s)` image links,
@@ -331,7 +331,7 @@ With pi and `pi-bg-jobs`:
 
 ```text
 bg_start({
-  command: "source ~/.agent-hive/hive.env && exec <skill>/wait_msg.sh --timeout 0 --interval 2",
+  command: "source ~/.agent-hive/hive.env && exec <skill>/src/wait_msg.sh --timeout 0 --interval 2",
   label: "agent-hive-mailbox",
   times: 100000
 })

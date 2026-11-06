@@ -49,7 +49,7 @@ chmod 600 ~/.agent-hive/register.token
 export AGENT_HIVE_URL="https://hive.example.com"
 cd agent-hive-skill
 
-./register.sh \
+./src/register.sh \
   --token-file ~/.agent-hive/register.token \
   --workspace /path/to/agent/workspace \
   --task "Build the landing page" \
@@ -70,13 +70,13 @@ the agent's shell. Session credentials are encrypted under
 Day-to-day commands:
 
 ```bash
-./send.sh --text "Build complete."
-./send.sh --text-file ./report.md     # Markdown; local/remote images are rehosted
-./send.sh --file ./artifact.zip
-./check_msg.sh --unread-only
-./wait_msg.sh --timeout 120
-./listen.sh --timeout 900             # wait + read one batch, then exit
-./list_contacts.sh
+./src/send.sh --text "Build complete."
+./src/send.sh --text-file ./report.md     # Markdown; local/remote images are rehosted
+./src/send.sh --file ./artifact.zip
+./src/check_msg.sh --unread-only
+./src/wait_msg.sh --timeout 120
+./src/listen.sh --timeout 900             # wait + read one batch, then exit
+./src/list_contacts.sh
 ```
 
 The complete skill contract — message cursors, `--text-file` image rewriting,
@@ -103,7 +103,7 @@ background listening, and peer etiquette — is in
 agent-hive/
 ├── server/            Express API, JSON store, SSE, uploads
 ├── web/               React app (chat, topology, settings)
-├── agent-hive-skill/  register / send / check / wait / listen scripts
+├── agent-hive-skill/  SKILL.md + src/ (register / send / check / wait / listen)
 ├── docs/poster.svg    this poster
 └── server/data/       runtime store + uploads (gitignored)
 ```

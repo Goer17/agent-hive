@@ -19,6 +19,7 @@ import { HiveMark } from "../../components/HiveMark";
 import { formatFileSize } from "../../lib/format";
 import { toast } from "../../lib/toast";
 import { AgentInfoPopover } from "./AgentInfoPopover";
+import { HarnessIcon } from "../../components/HarnessIcon";
 import { MessageBubble } from "./MessageBubble";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -266,7 +267,10 @@ export function ChatWindow({
         </button>
         <div className="chat-header-title">
           <h2>{agent.name}</h2>
-          <p>{agent.task}</p>
+          <p className="chat-header-task">
+            <HarnessIcon harness={agent.harness} size={11} />
+            <span>{agent.task}</span>
+          </p>
         </div>
       </header>
 

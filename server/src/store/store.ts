@@ -18,6 +18,7 @@ function freshStore(): StoreData {
     edges: [],
     edgeReads: {},
     edgeReadsMigrated: true,
+    harnessMigrated: true,
     categories: [
       { id: UNCATEGORIZED_ID, name: "Uncategorized", order: 0, locked: true },
     ],
@@ -57,6 +58,14 @@ function loadStore(): StoreData {
   data.agents ??= [];
   for (const agent of data.agents) {
     agent.harness ??= null;
+  }
+  // One-time migration: the sessions that predate --harness all run on pi.
+  if (!data.harnessMigrated) {
+    for (const agent of data.agents) {
+      if (!agent.harness) agent.harness = "pi";
+    }
+    data.harnessMigrated = true;
+    writeStore(data);
   }
   data.messages ??= [];
   data.uploads ??= [];

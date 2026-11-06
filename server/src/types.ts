@@ -86,6 +86,7 @@ export interface StoreData {
   edges: EdgeRecord[];
   edgeReads: Record<string, string>;
   edgeReadsMigrated: boolean;
+  harnessMigrated: boolean;
   categories: CategoryRecord[];
   tokens: TokenRecord[];
   usedAgentNames: string[];

@@ -3,8 +3,9 @@
 set -euo pipefail
 
 COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HIVE_SKILL_DIR="$(cd "$COMMON_DIR/.." && pwd)"
-HIVE_PY="$HIVE_SKILL_DIR/lib/hive.py"
+HIVE_SRC_DIR="$(cd "$COMMON_DIR/.." && pwd)"
+HIVE_SKILL_DIR="$(cd "$HIVE_SRC_DIR/.." && pwd)"
+HIVE_PY="$HIVE_SRC_DIR/lib/hive.py"
 MAX_FILE_SIZE=52428800
 
 # Optional local overrides. The server URL comes from AGENT_HIVE_URL.

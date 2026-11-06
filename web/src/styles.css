@@ -1007,6 +1007,18 @@ a {
   white-space: nowrap;
 }
 
+.chat-header-task {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.chat-header-task span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .message-scroll {
   flex: 1;
   min-height: 0;
