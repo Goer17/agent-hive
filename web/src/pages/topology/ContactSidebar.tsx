@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Category, TopologyAgent } from "../../types";
 import { Avatar } from "../../components/Avatar";
+import { HarnessIcon } from "../../components/HarnessIcon";
 
 interface ContactSidebarProps {
   agents: TopologyAgent[];
@@ -256,7 +257,10 @@ export function ContactSidebar({
                     <Avatar avatar={agent.avatar} size={28} alt={agent.name} />
                     <div className="contact-row-text">
                       <span className="contact-row-name">{agent.name}</span>
-                      <span className="contact-row-task">{agent.task}</span>
+                      <span className="contact-row-task">
+                        <HarnessIcon harness={agent.harness} size={10} />
+                        <span className="contact-row-task-text">{agent.task}</span>
+                      </span>
                     </div>
                     <button
                       type="button"
