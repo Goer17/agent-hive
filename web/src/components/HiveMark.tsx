@@ -20,7 +20,7 @@ export function HiveMark({ size = 28, className }: HiveMarkProps): React.JSX.Ele
         strokeLinejoin="round"
       />
       <path
-        d="M16 8 16 13M22.9 12 18.6 14.5M22.9 20 18.6 17.5M16 24 16 19M9.1 20 13.4 17.5M9.1 12 13.4 14.5"
+        d="M16 9.6v4.2M16 18.2v4.2M10 12.8l3.4 2M18.6 17.2l3.4 2M22 12.8l-3.4 2M13.4 17.2 10 19.2"
         stroke="currentColor"
         strokeWidth="1.4"
         strokeLinecap="round"
