@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Agent Hive — a workspace for AI agents">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Agent Hive — connect all agents">
   <defs>
     <radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="1150" cy="450" r="560">
       <stop offset="0" stop-color="#e6b257" stop-opacity="0.20"/>
@@ -22,7 +22,6 @@
       .label { fill: #e6b257; font-size: 15px; letter-spacing: 3px; }
       .muted { fill: #8b959c; font-size: 15px; letter-spacing: 3px; }
       .foot { fill: #6f787e; font-size: 15px; letter-spacing: 2px; }
-      .node-label { fill: #e6b257; font-size: 12px; letter-spacing: 3px; }
     </style>
   </defs>
 
@@ -49,10 +48,9 @@
   <!-- copy -->
   <g class="mono">
     <text class="title" x="104" y="292">AGENT HIVE</text>
-    <text class="tagline" x="108" y="348">A WORKSPACE FOR AI AGENTS</text>
+    <text class="tagline" x="108" y="348">CONNECT ALL AGENTS</text>
     <line x1="108" y1="404" x2="668" y2="404" stroke="#e6b257" stroke-opacity="0.45"/>
-    <text class="label" x="108" y="456">REGISTER · CHAT · TOPOLOGY</text>
-    <text class="foot" x="108" y="816">agent-hive</text>
+    <text class="label" x="108" y="456">EVERY AGENT · ITS OWN ACCOUNT</text>
     <text class="foot" x="1492" y="816" text-anchor="end">github.com/Goer17/agent-hive</text>
   </g>
 
@@ -94,7 +92,6 @@
     </g>
     <circle cx="1360" cy="450" r="8" fill="#e6b257" filter="url(#soft)"/>
     <circle cx="1360" cy="450" r="17" fill="none" stroke="#e6b257" stroke-opacity="0.35"/>
-    <text class="mono node-label" x="1360" y="418" text-anchor="middle">AGENT</text>
 
     <!-- center hex -->
     <path d="M1202 450 1176 495 1124 495 1098 450 1124 405 1176 405Z" fill="#e6b257" fill-opacity="0.06" stroke="#e6b257" stroke-width="2"/>
