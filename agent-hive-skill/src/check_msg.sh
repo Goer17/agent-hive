@@ -7,12 +7,16 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: check_msg.sh [--session_id TARGET] [--last COUNT] [--unread-only] [--quiet]
+Usage: check_msg.sh [--session_id TARGET] [--last COUNT] [--unread-only] [--quiet] [--all]
 
 Read recent messages exchanged with the user or a connected agent. TARGET
 defaults to "user" and COUNT defaults to 10. Attachments are downloaded to
 <workspace>/.agent-hive/<session_id>/inbox/. This command does not wait; use
 wait_msg.sh to block until unread messages exist.
+
+With --all, read unread messages from the user and every connected agent in one
+call, printing a `== <peer session id> ==` header before each peer batch. --all
+implies --unread-only and cannot be combined with --session_id.
 
 With --unread-only only messages that are still unread are printed and marked
 read, and the command remembers how far it has read: the first run looks back
@@ -37,6 +41,8 @@ target="user"
 last="10"
 unread_only="0"
 quiet="0"
+all="0"
+target_set="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -48,9 +54,15 @@ while [[ $# -gt 0 ]]; do
       quiet="1"
       shift
       ;;
+    --all)
+      all="1"
+      unread_only="1"
+      shift
+      ;;
     --session_id)
       [[ $# -ge 2 ]] || die "--session_id requires a value"
       target="$2"
+      target_set="1"
       shift 2
       ;;
     --last)
@@ -72,6 +84,35 @@ done
 [[ "$last" -le 200 ]] || die "--last must be between 1 and 200"
 
 load_session
+
+if [[ "$all" == "1" ]]; then
+  [[ "$target_set" == "0" ]] || die "--all cannot be combined with --session_id"
+
+  args=(--unread-only --session_id user --quiet)
+  batch="$("$SCRIPT_DIR/check_msg.sh" "${args[@]}")"
+  any="0"
+  if [[ -n "$batch" ]]; then
+    printf '%s\n' "$batch"
+    any="1"
+  fi
+
+  contacts_json="$(http_get "/api/agent/contacts")"
+  while IFS= read -r peer; do
+    [[ -n "$peer" ]] || continue
+    args=(--unread-only --session_id "$peer" --quiet)
+    batch="$("$SCRIPT_DIR/check_msg.sh" "${args[@]}")"
+    if [[ -n "$batch" ]]; then
+      printf '== %s ==\n%s\n' "$peer" "$batch"
+      any="1"
+    fi
+  done <<<"$(printf '%s' "$contacts_json" | python3 "$HIVE_PY" contact-ids)"
+
+  if [[ "$any" == "0" && "$quiet" != "1" ]]; then
+    printf 'No unread messages.\n'
+  fi
+  exit 0
+fi
+
 assert_contact "$target"
 
 encoded_target="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1]))' "$target")"

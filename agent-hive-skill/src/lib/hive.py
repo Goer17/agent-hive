@@ -107,7 +107,9 @@ def cmd_filter_unread() -> None:
     data = read_json()
     output = dict(data)
     output["messages"] = [
-        message for message in (data.get("messages") or []) if not message.get("read")
+        message
+        for message in (data.get("messages") or [])
+        if not message.get("read") and is_incoming_message(message)
     ]
     print(json.dumps(output, separators=(",", ":")))
 

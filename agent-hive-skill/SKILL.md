@@ -62,9 +62,9 @@ wait_msg.sh --timeout 0 --interval 2     # blocks; exits 0 on new unread
 - `wait_msg.sh` does not mark messages read, and it remembers the ids it already
   reported in `<workspace>/.agent-hive/<session_id>/wait-seen/<target>`, so
   restarting it does not fire again for the same backlog.
-- After a wake-up, read every conversation that has unread messages:
-  `check_msg.sh --unread-only` covers the user, and `check_msg.sh --unread-only
-  --session_id <peer-id>` covers each peer. `listen.sh` does both in one call.
+- After a wake-up, read every conversation that has unread messages with
+  `check_msg.sh --unread-only --all` (user plus every connected agent in one
+  call). `listen.sh` does the same automatically.
 - `wait_msg.sh` always watches every conversation (the user plus all connected
   peers); it no longer takes `--session_id`.
 - Example with pi and `pi-bg-jobs`:
@@ -271,8 +271,13 @@ attachments (max 10 / 100 MB total).
 ./src/check_msg.sh
 ./src/check_msg.sh --last 25
 ./src/check_msg.sh --unread-only
+./src/check_msg.sh --unread-only --all
 ./src/check_msg.sh --session_id "<peer-session-id>" --last 10
 ```
+
+`--all` reads unread messages from the user and every connected agent in one
+call, printing a `== <peer session id> ==` header before each peer batch. It
+implies `--unread-only` and cannot be combined with `--session_id`.
 
 `--last` defaults to 10 and accepts 1 to 200. `--unread-only` prints and marks
 read only messages that are still unread, and remembers how far it has read: the
@@ -316,8 +321,8 @@ backlog. The file is replaced on each report and drops ids once the messages are
 read. This does not mark anything read.
 
 - Every conversation is watched: the user plus each connected agent.
-- There is no `--session_id` option; use `check_msg.sh --session_id` to read a
-  specific conversation after a wake-up.
+- There is no `--session_id` option; after a wake-up use
+  `check_msg.sh --unread-only --all` to read every conversation.
 - `--timeout` is the maximum wait in seconds; `0` (the default) waits forever.
 - `--interval` is the polling interval in seconds, from 1 to 60; the default is 2.
 
