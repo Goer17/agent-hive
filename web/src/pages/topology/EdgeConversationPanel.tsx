@@ -129,25 +129,32 @@ export function EdgeConversationPanel({
         {!loading && messages.length === 0 ? (
           <p className="empty-note centered">No messages yet.</p>
         ) : null}
-        {messages.map((message) => (
-          <article key={message.id} className="edge-message">
-            <div className="edge-message-meta">
-              <span>{message.from.name}</span>
-              <span className="edge-message-state">
-                <time dateTime={message.createdAt}>{formatTimestamp(message.createdAt)}</time>
-                <span className={`message-read${message.read ? " is-read" : ""}`}>
-                  {message.read ? "Read" : "Unread"}
+        {messages.map((message) => {
+          const files = message.files?.length ? message.files : message.file ? [message.file] : [];
+          return (
+            <article key={message.id} className="edge-message">
+              <div className="edge-message-meta">
+                <span>{message.from.name}</span>
+                <span className="edge-message-state">
+                  <time dateTime={message.createdAt}>{formatTimestamp(message.createdAt)}</time>
+                  <span className={`message-read${message.read ? " is-read" : ""}`}>
+                    {message.read ? "Read" : "Unread"}
+                  </span>
                 </span>
-              </span>
-            </div>
-            <div className="edge-message-bubble">
-              {message.file ? (
-                <FileAttachment file={message.file} compact onMediaLoad={handleMediaLoad} />
-              ) : null}
-              {message.text ? <Markdown text={message.text} /> : null}
-            </div>
-          </article>
-        ))}
+              </div>
+              <div className="edge-message-bubble">
+                {files.length > 0 ? (
+                  <div className="edge-message-files">
+                    {files.map((file) => (
+                      <FileAttachment key={file.id} file={file} compact onMediaLoad={handleMediaLoad} />
+                    ))}
+                  </div>
+                ) : null}
+                {message.text ? <Markdown text={message.text} /> : null}
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );

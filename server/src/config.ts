@@ -16,6 +16,8 @@ export const WEB_DIST_DIR = path.resolve(
 );
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024;
+export const MAX_FILES = 10;
+export const MAX_TOTAL_FILE_SIZE = 100 * 1024 * 1024;
 export const MAX_TEXT_LENGTH = 20_000;
 export const SESSION_COOKIE = "hive_token";
 export const ACCESS_TOKEN_ENV = process.env.HIVE_ACCESS_TOKEN?.trim() || null;

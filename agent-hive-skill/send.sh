@@ -5,12 +5,18 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/common.sh
 source "$SCRIPT_DIR/lib/common.sh"
 
+MAX_ATTACHMENTS=10
+MAX_TOTAL_FILE_SIZE=104857600
+
 usage() {
   cat <<'EOF'
-Usage: send.sh [--session_id TARGET] (--text TEXT | --text-file PATH) [--file PATH]
+Usage: send.sh [--session_id TARGET] (--text TEXT | --text-file PATH) [--file PATH]...
 
-Send a message and/or one file to the user or to a connected agent. TARGET
-defaults to "user". Files are limited to 50 MB.
+Send a message and/or files to the user or to a connected agent. TARGET
+defaults to "user". Each file is limited to 50 MB; one message can carry up to
+10 files and 100 MB total. Repeat --file to attach several files:
+
+  ./send.sh --text "Two tables attached." --file a.png --file b.png
 
 --text and --text-file are mutually exclusive. With --text-file the file is read
 as Markdown; image links that point at absolute local paths or http(s) URLs are
@@ -29,7 +35,7 @@ target="user"
 text=""
 text_file=""
 text_from_file="0"
-file=""
+files=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -50,7 +56,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --file)
       [[ $# -ge 2 ]] || die "--file requires a value"
-      file="$2"
+      files+=("$2")
       shift 2
       ;;
     -h|--help)
@@ -73,15 +79,22 @@ if [[ -n "$text_file" ]]; then
   text_from_file="1"
 fi
 
-if [[ -z "$text" && -z "$file" ]]; then
+if [[ -z "$text" && ${#files[@]} -eq 0 ]]; then
   die "provide --text/--text-file and/or --file"
 fi
 
-if [[ -n "$file" ]]; then
-  [[ -f "$file" ]] || die "file not found: $file"
-  file_size="$(wc -c <"$file" | tr -d '[:space:]')"
-  [[ "$file_size" -le "$MAX_FILE_SIZE" ]] || die "file exceeds the 50 MB limit"
+if [[ ${#files[@]} -gt "$MAX_ATTACHMENTS" ]]; then
+  die "a message supports at most $MAX_ATTACHMENTS files"
 fi
+
+total_file_size=0
+for attached_file in ${files[@]+"${files[@]}"}; do
+  [[ -f "$attached_file" ]] || die "file not found: $attached_file"
+  file_size="$(wc -c <"$attached_file" | tr -d '[:space:]')"
+  [[ "$file_size" -le "$MAX_FILE_SIZE" ]] || die "file exceeds the 50 MB limit: $attached_file"
+  total_file_size=$((total_file_size + file_size))
+done
+[[ "$total_file_size" -le "$MAX_TOTAL_FILE_SIZE" ]] || die "attachments exceed the 100 MB total limit"
 
 load_session
 assert_contact "$target"
@@ -185,8 +198,10 @@ curl_args=(
 if [[ -n "$text" ]]; then
   curl_args+=(--form-string "text=$text")
 fi
-if [[ -n "$file" ]]; then
-  curl_args+=(-F "file=@${file}")
+if [[ ${#files[@]} -gt 0 ]]; then
+  for attached_file in "${files[@]}"; do
+    curl_args+=(-F "files=@${attached_file}")
+  done
 fi
 
 if ! status="$(curl "${curl_args[@]}" "$SERVER_URL/api/agent/messages")"; then

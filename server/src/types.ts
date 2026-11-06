@@ -42,6 +42,7 @@ export interface MessageRecord {
   };
   text: string;
   file: StoredFile | null;
+  files: StoredFile[];
   createdAt: string;
   read: boolean;
 }
@@ -112,6 +113,7 @@ export interface MessagePublic {
   from: MessageRecord["from"];
   text: string;
   file: PublicFile | null;
+  files: PublicFile[];
   createdAt: string;
   read: boolean;
 }
@@ -119,6 +121,7 @@ export interface MessagePublic {
 export interface LastMessagePreview {
   text: string;
   file: PublicFile | null;
+  files: PublicFile[];
   from: MessageRecord["from"];
   createdAt: string;
   read: boolean;

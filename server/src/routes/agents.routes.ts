@@ -2,7 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { clampInt, queryString } from "../lib/http.js";
 import { events } from "../lib/events.js";
-import { discardUpload, fileFromRequest } from "../lib/uploads.js";
+import { discardUploads, filesFromRequest } from "../lib/uploads.js";
 import { store } from "../store/store.js";
 import {
   deleteAgent,
@@ -21,7 +21,7 @@ import {
   userConversation,
   conversationParticipantIds,
 } from "../services/messages.service.js";
-import { upload } from "../middleware/upload.js";
+import { messageUpload } from "../middleware/upload.js";
 import { requireBrowserAuth } from "../middleware/auth.js";
 
 export const agentsRouter = Router();
@@ -78,17 +78,17 @@ agentsRouter.get("/:id/messages", (request, response) => {
 
 agentsRouter.post(
   "/:id/messages",
-  upload.single("file"),
+  messageUpload,
   (request, response, next) => {
     try {
       const agent = requireAgent(String(request.params.id));
       const text = typeof request.body.text === "string" ? request.body.text : "";
-      const file = fileFromRequest(request);
+      const files = filesFromRequest(request);
       const message = createMessage({
         conversation: userConversation(agent.sessionId),
         from: { role: "user", name: "user" },
         text,
-        file,
+        files,
       });
       if (agent.unread !== 0) {
         agent.unread = 0;
@@ -107,7 +107,7 @@ agentsRouter.post(
       events.emit({ type: "agents", data: {} });
       response.status(201).json({ message: toPublicMessage(message) });
     } catch (error) {
-      discardUpload(request);
+      discardUploads(request);
       next(error);
     }
   },

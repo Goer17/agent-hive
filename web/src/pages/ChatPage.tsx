@@ -144,12 +144,12 @@ export function ChatPage(): React.JSX.Element {
     }
   });
 
-  async function send(text: string, file: File | null): Promise<void> {
+  async function send(text: string, files: File[]): Promise<void> {
     const agentId = selectedIdRef.current;
     if (!agentId) throw new Error("No conversation selected.");
     setSending(true);
     try {
-      const result = await api.sendAgentMessage(agentId, text, file);
+      const result = await api.sendAgentMessage(agentId, text, files);
       setMessages((current) =>
         current.some((message) => message.id === result.message.id)
           ? current

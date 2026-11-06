@@ -1,4 +1,4 @@
-import { MAX_TEXT_LENGTH } from "../config.js";
+import { MAX_FILES, MAX_TEXT_LENGTH, MAX_TOTAL_FILE_SIZE } from "../config.js";
 import { newId } from "../lib/crypto.js";
 import { publicFile, removeStoredFile } from "../lib/files.js";
 import { badRequest } from "../lib/http.js";
@@ -15,6 +15,7 @@ export interface CreateMessageInput {
   from: MessageRecord["from"];
   text?: string;
   file?: StoredFile | null;
+  files?: StoredFile[];
 }
 
 export const userConversation = (agentId: string): string => `u:${agentId}`;
@@ -24,9 +25,16 @@ export const pairConversation = (first: string, second: string): string =>
 
 export function createMessage(input: CreateMessageInput): MessageRecord {
   const text = (input.text ?? "").trim();
-  const file = input.file ?? null;
+  const files = input.files ?? (input.file ? [input.file] : []);
 
-  if (!text && !file) badRequest("A message needs text or a file.");
+  if (!text && files.length === 0) badRequest("A message needs text or a file.");
+  if (files.length > MAX_FILES) {
+    badRequest(`A message supports at most ${MAX_FILES} files.`);
+  }
+  const totalFileSize = files.reduce((sum, file) => sum + file.size, 0);
+  if (totalFileSize > MAX_TOTAL_FILE_SIZE) {
+    badRequest("Attachments must total at most 100 MB.");
+  }
   if (text.length > MAX_TEXT_LENGTH) {
     badRequest(`Text must be at most ${MAX_TEXT_LENGTH} characters.`);
   }
@@ -36,7 +44,8 @@ export function createMessage(input: CreateMessageInput): MessageRecord {
     conversation: input.conversation,
     from: input.from,
     text,
-    file,
+    file: files[0] ?? null,
+    files,
     createdAt: new Date().toISOString(),
     read: false,
   };
@@ -46,11 +55,13 @@ export function createMessage(input: CreateMessageInput): MessageRecord {
 }
 
 export function toPublicMessage(message: MessageRecord): MessagePublic {
+  const files = message.files.map(publicFile);
   return {
     id: message.id,
     from: message.from,
     text: message.text,
-    file: message.file ? publicFile(message.file) : null,
+    file: files[0] ?? null,
+    files,
     createdAt: message.createdAt,
     read: message.read,
   };
@@ -90,9 +101,11 @@ export function lastMessageForAgent(agentId: string): LastMessagePreview | null 
   for (let index = store.data.messages.length - 1; index >= 0; index -= 1) {
     const message = store.data.messages[index];
     if (message?.conversation === conversation) {
+      const files = message.files.map(publicFile);
       return {
         text: message.text,
-        file: message.file ? publicFile(message.file) : null,
+        file: files[0] ?? null,
+        files,
         from: message.from,
         createdAt: message.createdAt,
         read: message.read,
@@ -219,7 +232,7 @@ export function deleteConversation(conversation: string): number {
   let removed = 0;
   for (const message of store.data.messages) {
     if (message.conversation === conversation) {
-      if (message.file) removeStoredFile(message.file);
+      for (const file of message.files) removeStoredFile(file);
       removed += 1;
     } else {
       kept.push(message);
@@ -241,7 +254,7 @@ export function deleteAllForAgent(agentId: string): number {
     const isPairConversation =
       message.conversation.startsWith("p:") && message.conversation.split(":").includes(agentId);
     if (isUserConversation || isPairConversation) {
-      if (message.file) removeStoredFile(message.file);
+      for (const file of message.files) removeStoredFile(file);
       removed += 1;
     } else {
       kept.push(message);
@@ -263,7 +276,8 @@ export function fileById(
   fileId: string,
 ): { message: MessageRecord | null; file: StoredFile } | null {
   for (const message of store.data.messages) {
-    if (message.file?.id === fileId) return { message, file: message.file };
+    const file = message.files.find((item) => item.id === fileId);
+    if (file) return { message, file };
   }
   const upload = store.data.uploads.find((file) => file.id === fileId);
   return upload ? { message: null, file: upload } : null;

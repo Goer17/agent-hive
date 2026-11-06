@@ -71,6 +71,13 @@ function loadStore(): StoreData {
   for (const message of data.messages) {
     if (typeof message.read !== "boolean") message.read = true;
   }
+
+  // Normalize the legacy single-file field into the multi-file array.
+  for (const message of data.messages) {
+    const legacy = (message as unknown as { file?: (typeof message.files)[number] | null }).file ?? null;
+    if (!Array.isArray(message.files)) message.files = legacy ? [legacy] : [];
+    message.file = message.files[0] ?? null;
+  }
   if (missingReadFlags) {
     for (const agent of data.agents) {
       if (!agent.unread) continue;

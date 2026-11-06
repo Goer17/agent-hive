@@ -19,6 +19,7 @@ export function MessageBubble({
   onMediaLoad,
 }: MessageBubbleProps): React.JSX.Element {
   const isAgent = message.from.role === "agent";
+  const files = message.files?.length ? message.files : message.file ? [message.file] : [];
 
   return (
     <article className={`message-row${isAgent ? " from-agent" : " from-user"}`}>
@@ -46,8 +47,14 @@ export function MessageBubble({
             </span>
           ) : null}
         </div>
-        <div className={`message-bubble${message.file ? " has-file" : ""}`}>
-          {message.file ? <FileAttachment file={message.file} onMediaLoad={onMediaLoad} /> : null}
+        <div className={`message-bubble${files.length > 0 ? " has-file" : ""}`}>
+          {files.length > 0 ? (
+            <div className="message-files">
+              {files.map((file) => (
+                <FileAttachment key={file.id} file={file} onMediaLoad={onMediaLoad} />
+              ))}
+            </div>
+          ) : null}
           {message.text ? <Markdown text={message.text} className="message-text" /> : null}
         </div>
       </div>

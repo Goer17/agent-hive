@@ -3,10 +3,10 @@ import { z } from "zod";
 import { badRequest, clampInt, HttpError, queryString } from "../lib/http.js";
 import { events } from "../lib/events.js";
 import { publicFile, sendStoredFile } from "../lib/files.js";
-import { discardUpload, fileFromRequest } from "../lib/uploads.js";
+import { discardUpload, discardUploads, fileFromRequest, filesFromRequest } from "../lib/uploads.js";
 import { store } from "../store/store.js";
 import { requireAgentAuth, type AgentRequest } from "../middleware/auth.js";
-import { upload } from "../middleware/upload.js";
+import { messageUpload, upload } from "../middleware/upload.js";
 import { createAgent } from "../services/agents.service.js";
 import {
   agentCanAccessFile,
@@ -129,6 +129,14 @@ agentApiRouter.get("/unread", (request, response) => {
 });
 
 function agentMessagePayload(message: MessageRecord): Record<string, unknown> {
+  const files = message.files.map((file) => ({
+    id: file.id,
+    name: file.name,
+    size: file.size,
+    mime: file.mime,
+    url: `/api/agent/files/${file.id}`,
+    download_url: `/api/agent/files/${file.id}?download=1`,
+  }));
   return {
     id: message.id,
     from: {
@@ -137,16 +145,8 @@ function agentMessagePayload(message: MessageRecord): Record<string, unknown> {
       ...(message.from.agentId ? { agent_id: message.from.agentId } : {}),
     },
     text: message.text,
-    file: message.file
-      ? {
-          id: message.file.id,
-          name: message.file.name,
-          size: message.file.size,
-          mime: message.file.mime,
-          url: `/api/agent/files/${message.file.id}`,
-          download_url: `/api/agent/files/${message.file.id}?download=1`,
-        }
-      : null,
+    file: files[0] ?? null,
+    files,
     created_at: message.createdAt,
     read: message.read,
   };
@@ -208,13 +208,13 @@ agentApiRouter.post("/messages/read", (request, response) => {
 
 agentApiRouter.post(
   "/messages",
-  upload.single("file"),
+  messageUpload,
   async (request, response, next) => {
     try {
       const agent = (request as AgentRequest).agent;
       const target = (typeof request.body.to === "string" ? request.body.to.trim() : "") || "user";
       const text = typeof request.body.text === "string" ? request.body.text : "";
-      const file = fileFromRequest(request);
+      const files = filesFromRequest(request);
       const resolved = agentConversationTarget(agent, target);
 
       const message = createMessage({
@@ -225,7 +225,7 @@ agentApiRouter.post(
           name: agent.name,
         },
         text,
-        file,
+        files,
       });
 
       if (resolved.type === "user") {
@@ -252,7 +252,7 @@ agentApiRouter.post(
         message: agentMessagePayload(message),
       });
     } catch (error) {
-      discardUpload(request);
+      discardUploads(request);
       next(error);
     }
   },

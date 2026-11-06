@@ -18,6 +18,7 @@ export interface Message {
   };
   text: string;
   file: MessageFile | null;
+  files: MessageFile[];
   createdAt: string;
   read: boolean;
 }
@@ -25,6 +26,7 @@ export interface Message {
 export interface LastMessagePreview {
   text: string;
   file: MessageFile | null;
+  files: MessageFile[];
   from: Message["from"];
   createdAt: string;
   read: boolean;

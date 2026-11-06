@@ -1145,6 +1145,13 @@ a {
   width: 100%;
 }
 
+.message-files,
+.edge-message-files {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .message-text {
   margin: 0;
 }
@@ -1591,6 +1598,18 @@ a {
 
 .send-button:disabled {
   opacity: 0.3;
+}
+
+.composer-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 840px;
+  margin: 0 auto 8px;
+}
+
+.composer-files .composer-file {
+  margin: 0;
 }
 
 .composer-file {

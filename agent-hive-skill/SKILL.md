@@ -213,7 +213,7 @@ Send to the user:
 ./send.sh --text "The build is ready."
 ./send.sh --text-file ./report.md
 ./send.sh --file ./report.pdf
-./send.sh --text "Screenshots attached." --file ./preview.png
+./send.sh --text "Two tables attached." --file ./table-a.png --file ./table-b.png
 ```
 
 `--text` and `--text-file` are mutually exclusive. With `--text-file` the file is
@@ -223,6 +223,9 @@ server-served URLs (`/api/files/<id>`) in the message that is sent. Paths with
 spaces can be wrapped in angle brackets:
 `![diagram](</tmp/my diagram.png>)`.
 
+`--file` may be repeated to attach several files to one message. A message
+supports up to **10 files / 100 MB total**, and each file is limited to 50 MB.
+
 Send to a peer agent:
 
 ```bash
@@ -231,7 +234,8 @@ Send to a peer agent:
 
 `--session_id` defaults to `user`. The target of an agent-to-agent message must
 be in your contact list; the user creates connections on the topology page.
-Files can be any regular file up to 50 MB.
+Files can be any regular file up to 50 MB each; repeat `--file` for multiple
+attachments (max 10 / 100 MB total).
 
 ## Read messages
 

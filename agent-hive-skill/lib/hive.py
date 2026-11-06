@@ -406,8 +406,10 @@ def safe_file_name(name: str) -> str:
 def download_file(file: dict, inbox: Path, server_url: str) -> str:
     inbox.mkdir(parents=True, exist_ok=True, mode=0o700)
     message_id = str(file.get("_message_id", ""))[:8]
+    file_id = str(file.get("id", ""))[:8]
     name = safe_file_name(str(file.get("name", "file")))
-    destination = inbox / f"{message_id}-{name}"
+    stem = f"{message_id}-{file_id}-" if file_id else f"{message_id}-"
+    destination = inbox / f"{stem}{name}"
     if destination.exists():
         return str(destination)
 
@@ -445,8 +447,10 @@ def cmd_render_messages() -> None:
         if text:
             for line in text.splitlines() or [""]:
                 print(f"  {line}")
-        attachment = message.get("file")
-        if attachment:
+        attachments = message.get("files")
+        if not isinstance(attachments, list):
+            attachments = [message["file"]] if message.get("file") else []
+        for attachment in attachments:
             file_info = dict(attachment)
             file_info["_message_id"] = message.get("id", "")
             destination = download_file(file_info, inbox, server_url)

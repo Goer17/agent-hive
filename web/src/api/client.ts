@@ -87,10 +87,10 @@ export const api = {
     request<{ messages: Message[]; hasMore: boolean }>(
       `/api/agents/${id}/messages?limit=100${before ? `&before=${encodeURIComponent(before)}` : ""}`,
     ),
-  sendAgentMessage: (id: string, text: string, file: File | null) => {
+  sendAgentMessage: (id: string, text: string, files: File[]) => {
     const body = new FormData();
     if (text) body.append("text", text);
-    if (file) body.append("file", file);
+    for (const file of files) body.append("files", file);
     return request<{ message: Message }>(`/api/agents/${id}/messages`, {
       method: "POST",
       body,

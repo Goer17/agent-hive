@@ -75,11 +75,14 @@ export function ChatList({
         ) : null}
         {displayAgents.map((agent) => {
           const last = agent.lastMessage;
+          const files = last?.files?.length ? last.files : last?.file ? [last.file] : [];
+          const firstFile = files[0];
+          const extraFiles = files.length > 1 ? ` +${files.length - 1}` : "";
           const preview = last
-            ? last.file
+            ? firstFile
               ? last.text
-                ? `${previewText(last.text, 48)} · ${last.file.name}`
-                : last.file.name
+                ? `${previewText(last.text, 48)} · ${firstFile.name}${extraFiles}`
+                : `${firstFile.name}${extraFiles}`
               : previewText(last.text)
             : "No messages yet.";
           return (
@@ -145,7 +148,7 @@ export function ChatList({
                 ) : null}
                 <div className="chat-row-bottom">
                   <span className="chat-row-preview">
-                    {last?.file ? <Paperclip size={11} className="inline-icon" /> : null}
+                    {files.length > 0 ? <Paperclip size={11} className="inline-icon" /> : null}
                     {preview}
                   </span>
                   <span className="chat-row-tail">

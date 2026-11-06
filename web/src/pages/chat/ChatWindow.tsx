@@ -22,6 +22,48 @@ import { AgentInfoPopover } from "./AgentInfoPopover";
 import { MessageBubble } from "./MessageBubble";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILES = 10;
+const MAX_TOTAL_FILE_SIZE = 100 * 1024 * 1024;
+
+function ComposerFile({
+  file,
+  onRemove,
+}: {
+  file: File;
+  onRemove: () => void;
+}): React.JSX.Element {
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file.type.startsWith("image/")) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  return (
+    <div className="composer-file">
+      {preview ? (
+        <img className="composer-file-thumb" src={preview} alt={file.name} />
+      ) : (
+        <FileIcon size={14} />
+      )}
+      <span className="composer-file-name">{file.name}</span>
+      <span className="composer-file-size">{formatFileSize(file.size)}</span>
+      <button
+        type="button"
+        className="icon-button icon-button-small"
+        aria-label={`Remove ${file.name}`}
+        onClick={onRemove}
+      >
+        <X size={13} />
+      </button>
+    </div>
+  );
+}
 
 interface ChatWindowProps {
   agent: Agent | null;
@@ -31,7 +73,7 @@ interface ChatWindowProps {
   hasMore: boolean;
   sending: boolean;
   onBack: () => void;
-  onSend: (text: string, file: File | null) => Promise<void>;
+  onSend: (text: string, files: File[]) => Promise<void>;
   onLoadMore: () => Promise<void>;
   onUpdated: (agent: Agent) => void;
   onDeleted: (agent: Agent) => void;
@@ -51,8 +93,7 @@ export function ChatWindow({
   onDeleted,
 }: ChatWindowProps): React.JSX.Element {
   const [text, setText] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [infoOpen, setInfoOpen] = useState(false);
   const [localSending, setLocalSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,16 +107,6 @@ export function ChatWindow({
   const wasLoadingOlderRef = useRef(false);
 
   const busy = sending || localSending;
-
-  useEffect(() => {
-    if (!file || !file.type.startsWith("image/")) {
-      setFilePreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    setFilePreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
-  }, [file]);
 
   useEffect(() => {
     if (!agent) setInfoOpen(false);
@@ -120,13 +151,13 @@ export function ChatWindow({
   async function submit(): Promise<void> {
     if (!agent || busy) return;
     const trimmed = text.trim();
-    if (!trimmed && !file) return;
+    if (!trimmed && files.length === 0) return;
     setLocalSending(true);
     forceScrollRef.current = true;
     try {
-      await onSend(trimmed, file);
+      await onSend(trimmed, files);
       setText("");
-      setFile(null);
+      setFiles([]);
       if (textareaRef.current) textareaRef.current.style.height = "38px";
       textareaRef.current?.focus();
     } catch (error) {
@@ -155,13 +186,25 @@ export function ChatWindow({
     });
   }
 
-  function chooseFile(selected: File | null): void {
-    if (!selected) return;
-    if (selected.size > MAX_FILE_SIZE) {
-      toast("File exceeds the 50 MB limit.");
+  function addFiles(selected: File[]): void {
+    const valid = selected.filter((candidate) => candidate.size <= MAX_FILE_SIZE);
+    if (valid.length < selected.length) toast("Some files exceed the 50 MB limit.");
+    if (valid.length === 0) return;
+
+    const next = [...files, ...valid];
+    if (next.length > MAX_FILES) {
+      toast(`A message supports at most ${MAX_FILES} files.`);
       return;
     }
-    setFile(selected);
+    if (next.reduce((total, candidate) => total + candidate.size, 0) > MAX_TOTAL_FILE_SIZE) {
+      toast("Attachments must total at most 100 MB.");
+      return;
+    }
+    setFiles(next);
+  }
+
+  function removeFile(index: number): void {
+    setFiles((current) => current.filter((_, position) => position !== index));
   }
 
   function handlePaste(event: React.ClipboardEvent<HTMLTextAreaElement>): void {
@@ -187,7 +230,7 @@ export function ChatWindow({
     event.preventDefault();
     const subtype = image.type === "image/jpeg" ? "jpg" : image.type.split("/")[1] || "png";
     const extension = subtype.replace(/[^a-z0-9]/gi, "") || "png";
-    chooseFile(new File([image], `pasted-image-${Date.now()}.${extension}`, { type: image.type }));
+    addFiles([new File([image], `pasted-image-${Date.now()}.${extension}`, { type: image.type })]);
   }
 
   if (!agent) {
@@ -270,40 +313,33 @@ export function ChatWindow({
       </div>
 
       <footer className="composer">
-        {file ? (
-          <div className="composer-file">
-            {filePreviewUrl ? (
-              <img className="composer-file-thumb" src={filePreviewUrl} alt={file.name} />
-            ) : (
-              <FileIcon size={14} />
-            )}
-            <span className="composer-file-name">{file.name}</span>
-            <span className="composer-file-size">{formatFileSize(file.size)}</span>
-            <button
-              type="button"
-              className="icon-button icon-button-small"
-              aria-label="Remove file"
-              onClick={() => setFile(null)}
-            >
-              <X size={13} />
-            </button>
+        {files.length > 0 ? (
+          <div className="composer-files">
+            {files.map((item, index) => (
+              <ComposerFile
+                key={`${item.name}-${item.lastModified}-${index}`}
+                file={item}
+                onRemove={() => removeFile(index)}
+              />
+            ))}
           </div>
         ) : null}
         <div className="composer-row">
           <input
             ref={fileInputRef}
             type="file"
+            multiple
             className="visually-hidden"
             onChange={(event) => {
-              chooseFile(event.target.files?.[0] ?? null);
+              addFiles(Array.from(event.target.files ?? []));
               event.target.value = "";
             }}
           />
           <button
             type="button"
             className="icon-button composer-attach"
-            aria-label="Attach file"
-            title="Attach file (paste an image with Ctrl+V)"
+            aria-label="Attach files"
+            title="Attach files (paste images with Ctrl+V)"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip size={18} />
@@ -332,7 +368,7 @@ export function ChatWindow({
             className="send-button"
             aria-label="Send"
             title="Send"
-            disabled={busy || (!text.trim() && !file)}
+            disabled={busy || (!text.trim() && files.length === 0)}
             onClick={() => void submit()}
           >
             {busy ? <Loader2 size={17} className="spin" /> : <Send size={17} />}
