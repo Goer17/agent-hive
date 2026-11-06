@@ -342,11 +342,8 @@ export function GraphView({
               const active = selectedEdgeId === edge.id || hoveredEdgeId === edge.id;
               const midX = (first.x + second.x) / 2;
               const midY = (first.y + second.y) / 2;
-              const dx = second.x - first.x;
-              const dy = second.y - first.y;
-              const length = Math.hypot(dx, dy) || 1;
-              const badgeX = midX - (dy / length) * 16;
-              const badgeY = midY + (dx / length) * 16;
+              const badgeX = midX;
+              const badgeY = midY;
               return (
                 <g key={edge.id} className="graph-edge">
                   <line
