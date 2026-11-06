@@ -813,12 +813,31 @@ a {
 }
 
 .chat-row-task {
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
   color: var(--muted-2);
   font-size: 9.5px;
   line-height: 1.15;
+}
+
+.chat-row-task-text {
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.harness-icon {
+  flex: none;
+  color: var(--accent);
+  overflow: visible;
+}
+
+.harness-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .chat-row.is-active .chat-row-task {

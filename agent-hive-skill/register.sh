@@ -7,7 +7,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 
 usage() {
   cat <<'EOF'
-Usage: register.sh (--token TOKEN | --token-file PATH) [--workspace PATH] --task TASK
+Usage: register.sh (--token TOKEN | --token-file PATH) [--workspace PATH] --task TASK [--harness NAME]
 
 Register this agent session with the Agent Hive server. The workspace defaults
 to the current directory. Credentials are written to
@@ -29,6 +29,7 @@ token=""
 token_file=""
 workspace="."
 task=""
+harness=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -50,6 +51,11 @@ while [[ $# -gt 0 ]]; do
     --task)
       [[ $# -ge 2 ]] || die "--task requires a value"
       task="$2"
+      shift 2
+      ;;
+    --harness)
+      [[ $# -ge 2 ]] || die "--harness requires a value"
+      harness="$2"
       shift 2
       ;;
     -h|--help)
@@ -93,6 +99,7 @@ payload="$(
   HIVE_TOKEN="$token" \
   HIVE_WORKSPACE="$workspace" \
   HIVE_TASK="$task" \
+  HIVE_HARNESS="$harness" \
   HIVE_HOST="$host" \
   python3 "$HIVE_PY" make-register-json
 )"

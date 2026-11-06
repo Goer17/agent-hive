@@ -55,6 +55,9 @@ function loadStore(): StoreData {
   }
 
   data.agents ??= [];
+  for (const agent of data.agents) {
+    agent.harness ??= null;
+  }
   data.messages ??= [];
   data.uploads ??= [];
   data.edges ??= [];

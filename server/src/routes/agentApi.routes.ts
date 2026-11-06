@@ -32,6 +32,7 @@ const registerSchema = z.object({
   token: z.string().min(1, "Token is required."),
   workspace: z.string().trim().max(1000).optional().default("."),
   task: z.string().trim().min(1, "Task is required.").max(200),
+  harness: z.string().trim().max(60).optional(),
   host: z.string().trim().max(200).optional(),
 });
 
@@ -48,6 +49,7 @@ agentApiRouter.post("/register", async (request, response) => {
     host,
     workspace,
     task: body.task,
+    harness: body.harness,
   });
 
   const text = `Registered using token ${tokenRecord.prefix}-***.`;
@@ -83,6 +85,7 @@ agentApiRouter.post("/register", async (request, response) => {
     host: agent.host,
     workspace: agent.workspace,
     task: agent.task,
+    harness: agent.harness,
   });
 });
 

@@ -19,6 +19,7 @@ export function toPublicAgent(agent: AgentRecord): AgentPublic {
     host: agent.host,
     workspace: agent.workspace,
     task: agent.task,
+    harness: agent.harness,
     avatar: agent.avatar,
     createdAt: agent.createdAt,
     order: agent.order,
@@ -98,6 +99,7 @@ export interface RegisterAgentInput {
   host: string;
   workspace: string;
   task: string;
+  harness?: string | null;
 }
 
 export function createAgent(input: RegisterAgentInput): {
@@ -122,6 +124,7 @@ export function createAgent(input: RegisterAgentInput): {
     host: input.host,
     workspace: input.workspace,
     task: input.task,
+    harness: input.harness?.trim().toLowerCase() || null,
     avatar: pickAvatar(),
     createdAt: now,
     order: maxOrder + 1,

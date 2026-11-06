@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { Agent } from "../../types";
 import { Avatar } from "../../components/Avatar";
+import { HarnessIcon } from "../../components/HarnessIcon";
 import { ContextMenu } from "../../components/ContextMenu";
 import { formatListTime, previewText } from "../../lib/format";
 
@@ -143,7 +144,8 @@ export function ChatList({
                 </div>
                 {agent.task ? (
                   <span className="chat-row-task" title={agent.task}>
-                    {agent.task}
+                    <HarnessIcon harness={agent.harness} size={11} />
+                    <span className="chat-row-task-text">{agent.task}</span>
                   </span>
                 ) : null}
                 <div className="chat-row-bottom">

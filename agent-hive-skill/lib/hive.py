@@ -64,6 +64,7 @@ def cmd_make_register_json() -> None:
         "token": os.environ.get("HIVE_TOKEN", ""),
         "workspace": os.environ.get("HIVE_WORKSPACE", "."),
         "task": os.environ.get("HIVE_TASK", ""),
+        "harness": os.environ.get("HIVE_HARNESS", ""),
         "host": os.environ.get("HIVE_HOST", ""),
     }
     print(json.dumps(payload, separators=(",", ":")))
@@ -78,6 +79,7 @@ def cmd_make_credentials() -> None:
         "host": response.get("host") or os.environ.get("HIVE_HOST", ""),
         "workspace": response.get("workspace") or os.environ.get("HIVE_WORKSPACE", "."),
         "task": response.get("task", ""),
+        "harness": response.get("harness") or os.environ.get("HIVE_HARNESS", ""),
         "server_url": os.environ.get("AGENT_HIVE_URL", ""),
         "registered_at": datetime.now(timezone.utc).isoformat(),
         "format": 1,

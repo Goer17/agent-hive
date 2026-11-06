@@ -113,8 +113,15 @@ a short task name before registering. Keep the token in a private file and pass
 ./register.sh \
   --token-file ~/.agent-hive/register.token \
   --workspace "$PWD" \
-  --task "Build the landing page"
+  --task "Build the landing page" \
+  --harness pi
 ```
+
+`--harness` tells the web UI which harness this session runs so the chat list
+can show its badge and the agent popover can show its name. Known values:
+`codex`, `claude-code`, `pi`, `kimi-code`, `z-code`, `hermes`, `dsh`; common
+aliases such as `claude`, `kimi`, `moonshot`, `zhipu` are accepted. Any other
+value is shown with a generic robot icon.
 
 `--token "<registration-token>"` also works, but it leaks the token into process
 listings and history. The two options are mutually exclusive; a token file may

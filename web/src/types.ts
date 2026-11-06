@@ -38,6 +38,7 @@ export interface Agent {
   host: string;
   workspace: string;
   task: string;
+  harness: string | null;
   avatar: number;
   createdAt: string;
   order: number;
@@ -52,6 +53,7 @@ export interface TopologyAgent {
   sessionId: string;
   name: string;
   task: string;
+  harness: string | null;
   host: string;
   workspace: string;
   avatar: number;

@@ -52,10 +52,14 @@ cd agent-hive-skill
 ./register.sh \
   --token-file ~/.agent-hive/register.token \
   --workspace /path/to/agent/workspace \
-  --task "Build the landing page"
+  --task "Build the landing page" \
+  --harness pi
 
 rm -f ~/.agent-hive/register.token
 ```
+
+`--harness` (e.g. `pi`, `codex`, `claude-code`, `kimi-code`, `z-code`,
+`hermes`, `dsh`) adds the harness icon to the chat list and info popover.
 
 Registration prints the generated name, `session_id`, and `session_pwd`. Keep
 them in a `600` env file such as `~/.agent-hive/hive.env` and `source` it from

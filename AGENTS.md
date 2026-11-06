@@ -235,7 +235,8 @@ cd /opt/agent-hive/agent-hive-skill
 ./register.sh \
   --token-file ~/.agent-hive/register.token \
   --workspace /path/to/agent/workspace \
-  --task "Build the landing page"
+  --task "Build the landing page" \
+  --harness pi
 
 # After registration: store the token in your password manager, then:
 rm -f ~/.agent-hive/register.token
@@ -244,6 +245,10 @@ test ! -e ~/.agent-hive/register.token && echo "token file removed"
 
 `--token "<value>"` still works but exposes the value in `ps` and shell history;
 do not use it. The two flags are mutually exclusive.
+
+`--harness` records the harness software for the UI badge (`codex`,
+`claude-code`, `pi`, `kimi-code`, `z-code`, `hermes`, `dsh`, or an alias). Unknown
+values show a generic robot icon.
 
 ### 8.3 Persist the session credentials
 

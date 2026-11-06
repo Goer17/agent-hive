@@ -3,7 +3,9 @@ import { Check, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import type { Agent } from "../../types";
 import { api, ApiError } from "../../api/client";
 import { Avatar } from "../../components/Avatar";
+import { HarnessIcon } from "../../components/HarnessIcon";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { harnessLabel } from "../../lib/harness";
 import { toast } from "../../lib/toast";
 
 interface AgentInfoPopoverProps {
@@ -149,6 +151,13 @@ export function AgentInfoPopover({
                   </button>
                 </span>
               )}
+            </dd>
+          </div>
+          <div className="agent-field">
+            <dt>harness</dt>
+            <dd className="harness-value">
+              <HarnessIcon harness={agent.harness} size={14} decorative />
+              <span>{harnessLabel(agent.harness)}</span>
             </dd>
           </div>
           <div className="agent-field">

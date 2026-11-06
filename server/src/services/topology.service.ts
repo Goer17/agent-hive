@@ -14,6 +14,7 @@ export interface TopologyAgent {
   sessionId: string;
   name: string;
   task: string;
+  harness: string | null;
   host: string;
   workspace: string;
   avatar: number;
@@ -46,6 +47,7 @@ export function topologyPayload(): TopologyPayload {
       sessionId: agent.sessionId,
       name: agent.name,
       task: agent.task,
+      harness: agent.harness,
       host: agent.host,
       workspace: agent.workspace,
       avatar: agent.avatar,

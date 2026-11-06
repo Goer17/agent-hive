@@ -6,6 +6,7 @@ export interface AgentRecord {
   host: string;
   workspace: string;
   task: string;
+  harness: string | null;
   avatar: number;
   createdAt: string;
   order: number;
@@ -99,6 +100,7 @@ export interface AgentPublic {
   host: string;
   workspace: string;
   task: string;
+  harness: string | null;
   avatar: number;
   createdAt: string;
   order: number;
