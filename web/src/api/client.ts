@@ -1,6 +1,8 @@
 import type {
   Agent,
   EdgeMessagesResponse,
+  EmailNotificationSettings,
+  EmailSettingsInput,
   GeneratedToken,
   Message,
   PublicToken,
@@ -70,7 +72,13 @@ export const api = {
     (await request<{ agents: Agent[] }>("/api/agents")).agents,
   updateAgent: async (
     id: string,
-    update: { task?: string; pinned?: boolean; unread?: number; categoryId?: string },
+    update: {
+      task?: string;
+      pinned?: boolean;
+      unread?: number;
+      emailNotifications?: boolean;
+      categoryId?: string;
+    },
   ) => (await request<{ agent: Agent }>(`/api/agents/${id}`, {
     method: "PATCH",
     body: update,
@@ -142,4 +150,18 @@ export const api = {
     }),
   deleteToken: (id: string) =>
     request<{ deleted: boolean }>(`/api/tokens/${id}`, { method: "DELETE" }),
+
+  emailSettings: async () =>
+    (await request<{ settings: EmailNotificationSettings }>("/api/settings/email"))
+      .settings,
+  updateEmailSettings: async (settings: EmailSettingsInput) =>
+    (await request<{ settings: EmailNotificationSettings }>("/api/settings/email", {
+      method: "PUT",
+      body: settings,
+    })).settings,
+  testEmailSettings: (settings: EmailSettingsInput) =>
+    request<{ sent: boolean }>("/api/settings/email/test", {
+      method: "POST",
+      body: settings,
+    }),
 };

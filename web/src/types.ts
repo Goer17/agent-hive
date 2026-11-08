@@ -44,6 +44,7 @@ export interface Agent {
   order: number;
   pinned: boolean;
   unread: number;
+  emailNotifications: boolean;
   categoryId: string;
   graph: { x: number; y: number };
   lastMessage: LastMessagePreview | null;
@@ -92,6 +93,32 @@ export interface PublicToken {
 
 export interface GeneratedToken extends PublicToken {
   token: string;
+}
+
+export interface EmailNotificationSettings {
+  enabled: boolean;
+  email: string | null;
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string | null;
+  smtpPasswordSet: boolean;
+  smtpFrom: string | null;
+  serverUrl: string | null;
+  configured: boolean;
+}
+
+export interface EmailSettingsInput {
+  enabled: boolean;
+  email: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string;
+  smtpPassword?: string;
+  clearPassword?: boolean;
+  smtpFrom: string;
+  serverUrl: string;
 }
 
 export interface EdgeMessagesResponse {

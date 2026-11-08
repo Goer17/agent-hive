@@ -45,6 +45,7 @@ const updateSchema = z.object({
   task: z.string().optional(),
   pinned: z.boolean().optional(),
   unread: z.number().int().optional(),
+  emailNotifications: z.boolean().optional(),
   categoryId: z.string().optional(),
 });
 

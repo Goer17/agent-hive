@@ -11,6 +11,7 @@ import { agentApiRouter } from "./routes/agentApi.routes.js";
 import { topologyRouter } from "./routes/topology.routes.js";
 import { categoriesRouter } from "./routes/categories.routes.js";
 import { tokensRouter } from "./routes/tokens.routes.js";
+import { settingsRouter } from "./routes/settings.routes.js";
 import { filesRouter } from "./routes/files.routes.js";
 import { eventsRouter } from "./routes/events.routes.js";
 
@@ -48,6 +49,7 @@ export function createApp(): express.Express {
   app.use("/api/topology", topologyRouter);
   app.use("/api/categories", categoriesRouter);
   app.use("/api/tokens", tokensRouter);
+  app.use("/api/settings", settingsRouter);
   app.use("/api/files", filesRouter);
   app.use("/api/events", eventsRouter);
   app.use("/api/agent", agentApiRouter);

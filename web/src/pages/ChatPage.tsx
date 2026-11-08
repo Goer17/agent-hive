@@ -6,6 +6,13 @@ import { toast } from "../lib/toast";
 import { ChatList } from "./chat/ChatList";
 import { ChatWindow } from "./chat/ChatWindow";
 
+function linkedAgentId(): string | null {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  const queryIndex = hash.indexOf("?");
+  if (queryIndex === -1) return null;
+  return new URLSearchParams(hash.slice(queryIndex + 1)).get("agent");
+}
+
 function sortAgents(agents: Agent[]): Agent[] {
   return [...agents].sort((left, right) => {
     if (left.pinned !== right.pinned) return left.pinned ? -1 : 1;
@@ -33,6 +40,7 @@ export function ChatPage(): React.JSX.Element {
   const loadedAgentIdRef = useRef(loadedAgentId);
   loadedAgentIdRef.current = loadedAgentId;
   const messageRequestRef = useRef(0);
+  const pendingLinkedAgentRef = useRef<string | null>(linkedAgentId());
 
   const refreshAgents = useCallback(async (reportError = false): Promise<void> => {
     try {
@@ -41,6 +49,11 @@ export function ChatPage(): React.JSX.Element {
       const active = selectedIdRef.current;
       if (active && !next.some((agent) => agent.sessionId === active)) {
         setSelectedId(null);
+      }
+      const linked = pendingLinkedAgentRef.current;
+      if (!active && linked && next.some((agent) => agent.sessionId === linked)) {
+        setSelectedId(linked);
+        pendingLinkedAgentRef.current = null;
       }
     } catch (error) {
       if (reportError) {
@@ -125,6 +138,20 @@ export function ChatPage(): React.JSX.Element {
     setSelectedId(agents[0]?.sessionId ?? null);
   }, [agents, isMobile, selectedId]);
 
+  useEffect(() => {
+    const onHashChange = (): void => {
+      const linked = linkedAgentId();
+      if (!linked) return;
+      if (agentsRef.current.some((agent) => agent.sessionId === linked)) {
+        setSelectedId(linked);
+      } else {
+        pendingLinkedAgentRef.current = linked;
+      }
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
   useSseEvent((event) => {
     if (event.type === "message" || event.type === "agents") {
       void refreshAgents();
@@ -190,6 +217,30 @@ export function ChatPage(): React.JSX.Element {
     }
   }
 
+  async function toggleEmailNotifications(agent: Agent): Promise<void> {
+    const emailNotifications = !agent.emailNotifications;
+    setAgents((items) =>
+      items.map((item) =>
+        item.sessionId === agent.sessionId ? { ...item, emailNotifications } : item,
+      ),
+    );
+    try {
+      const updated = await api.updateAgent(agent.sessionId, { emailNotifications });
+      setAgents((items) =>
+        items.map((item) =>
+          item.sessionId === updated.sessionId ? { ...item, ...updated } : item,
+        ),
+      );
+      toast(
+        emailNotifications ? "Email notifications resumed." : "Email notifications paused.",
+        "success",
+      );
+    } catch (error) {
+      toast(error instanceof ApiError ? error.message : "Unable to update email notifications.");
+      void refreshAgents();
+    }
+  }
+
   async function markUnread(agent: Agent): Promise<void> {
     const unread = Math.max(1, agent.unread);
     setAgents((items) =>
@@ -243,6 +294,7 @@ export function ChatPage(): React.JSX.Element {
         }}
         onTogglePin={(agent) => void togglePin(agent)}
         onMarkUnread={(agent) => void markUnread(agent)}
+        onToggleEmailNotifications={(agent) => void toggleEmailNotifications(agent)}
         onReorder={(ids) => void reorder(ids)}
       />
       <ChatWindow

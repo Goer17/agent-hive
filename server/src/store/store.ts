@@ -1,9 +1,45 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DATA_DIR, UPLOAD_DIR, UNCATEGORIZED_ID } from "../config.js";
-import type { StoreData } from "../types.js";
+import type { NotificationSettings, StoreData } from "../types.js";
 
 const STORE_FILE = path.join(DATA_DIR, "store.json");
+
+function defaultNotifications(): NotificationSettings {
+  return {
+    enabled: false,
+    email: null,
+    smtpHost: null,
+    smtpPort: 587,
+    smtpSecure: false,
+    smtpUser: null,
+    smtpPassword: null,
+    smtpFrom: null,
+    serverUrl: null,
+  };
+}
+
+function normalizeNotifications(value: unknown): NotificationSettings {
+  const defaults = defaultNotifications();
+  if (!value || typeof value !== "object") return defaults;
+  const raw = value as Record<string, unknown>;
+  const text = (candidate: unknown): string | null =>
+    typeof candidate === "string" && candidate.trim() ? candidate.trim() : null;
+  const secret = (candidate: unknown): string | null =>
+    typeof candidate === "string" && candidate.length > 0 ? candidate : null;
+  const port = Number(raw.smtpPort);
+  return {
+    enabled: raw.enabled === true,
+    email: text(raw.email),
+    smtpHost: text(raw.smtpHost),
+    smtpPort: Number.isInteger(port) && port > 0 && port <= 65535 ? port : defaults.smtpPort,
+    smtpSecure: raw.smtpSecure === true,
+    smtpUser: text(raw.smtpUser),
+    smtpPassword: secret(raw.smtpPassword),
+    smtpFrom: text(raw.smtpFrom),
+    serverUrl: text(raw.serverUrl),
+  };
+}
 
 function freshStore(): StoreData {
   const now = new Date().toISOString();
@@ -25,7 +61,7 @@ function freshStore(): StoreData {
     tokens: [],
     usedAgentNames: [],
     settings: {
-      notifications: { email: null, enabled: false },
+      notifications: defaultNotifications(),
     },
   };
 }
@@ -58,6 +94,7 @@ function loadStore(): StoreData {
   data.agents ??= [];
   for (const agent of data.agents) {
     agent.harness ??= null;
+    if (typeof agent.emailNotifications !== "boolean") agent.emailNotifications = true;
   }
   // One-time migration: the sessions that predate --harness all run on pi.
   if (!data.harnessMigrated) {
@@ -74,8 +111,8 @@ function loadStore(): StoreData {
   data.categories ??= [];
   data.tokens ??= [];
   data.usedAgentNames ??= [];
-  data.settings ??= { notifications: { email: null, enabled: false } };
-  data.settings.notifications ??= { email: null, enabled: false };
+  data.settings ??= { notifications: defaultNotifications() };
+  data.settings.notifications = normalizeNotifications(data.settings.notifications);
 
   const missingReadFlags = data.messages.some(
     (message) => typeof (message as { read?: unknown }).read !== "boolean",

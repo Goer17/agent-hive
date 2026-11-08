@@ -15,7 +15,7 @@ type AuthState = "loading" | "authenticated" | "unauthenticated";
 const VALID_VIEWS: View[] = ["chat", "topology", "settings"];
 
 function viewFromHash(): View {
-  const value = window.location.hash.replace(/^#\/?/, "");
+  const [value = ""] = window.location.hash.replace(/^#\/?/, "").split("?");
   return VALID_VIEWS.includes(value as View) ? (value as View) : "chat";
 }
 
@@ -87,8 +87,8 @@ export function App(): React.JSX.Element {
 
   function changeView(next: View): void {
     setView(next);
-    const hash = `#/${next}`;
-    if (window.location.hash !== hash) window.location.hash = hash;
+    const [current = ""] = window.location.hash.replace(/^#\/?/, "").split("?");
+    if (current !== next) window.location.hash = `#/${next}`;
   }
 
   if (auth === "loading") {

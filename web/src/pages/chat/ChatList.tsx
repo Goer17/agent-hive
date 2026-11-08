@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import {
+  Bell,
+  BellOff,
   Ellipsis,
   Loader2,
   Mail,
@@ -20,6 +22,7 @@ interface ChatListProps {
   onSelect: (agent: Agent) => void;
   onTogglePin: (agent: Agent) => void;
   onMarkUnread: (agent: Agent) => void;
+  onToggleEmailNotifications: (agent: Agent) => void;
   onReorder: (orderedIds: string[]) => void;
 }
 
@@ -30,6 +33,7 @@ export function ChatList({
   onSelect,
   onTogglePin,
   onMarkUnread,
+  onToggleEmailNotifications,
   onReorder,
 }: ChatListProps): React.JSX.Element {
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -136,6 +140,13 @@ export function ChatList({
                 <div className="chat-row-top">
                   <span className="chat-row-name">
                     {agent.pinned ? <Pin size={11} className="pin-icon" aria-label="Pinned" /> : null}
+                    {!agent.emailNotifications ? (
+                      <BellOff
+                        size={11}
+                        className="muted-icon"
+                        aria-label="Email notifications off"
+                      />
+                    ) : null}
                     {agent.name}
                   </span>
                   <span className="chat-row-time">
@@ -197,6 +208,13 @@ export function ChatList({
               label: "Mark as unread",
               icon: <Mail size={14} />,
               onSelect: () => onMarkUnread(menu.agent),
+            },
+            {
+              label: menu.agent.emailNotifications
+                ? "Unsubscribe email"
+                : "Resubscribe email",
+              icon: menu.agent.emailNotifications ? <BellOff size={14} /> : <Bell size={14} />,
+              onSelect: () => onToggleEmailNotifications(menu.agent),
             },
           ]}
         />

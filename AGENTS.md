@@ -75,6 +75,7 @@ npm run build        # builds web/dist, then server/dist
 | `HIVE_DATA_DIR` | `server/data` | Store, uploads, and access token |
 | `HIVE_WEB_DIST` | `web/dist` | Built web assets |
 | `HIVE_ACCESS_TOKEN` | generated | Override the browser access token |
+| `HIVE_PUBLIC_URL` | `http://localhost:<PORT>` | Base URL for links in notification emails |
 
 Create a dedicated data directory if you do not want state inside the checkout:
 
@@ -203,6 +204,19 @@ The browser receives an HttpOnly `hive_token` cookie after login.
 > [!NOTE]
 > The access token is **not** the registration token below. The access token
 > stays on the server; registration tokens are handed to agents once.
+
+### 7.1 Email notifications (optional)
+
+Open **Settings → Email notifications** and fill in the recipient address, the
+SMTP host and port, the sender address, and the credentials if your provider
+requires them. Use **Send test email** before enabling delivery. The **Server
+URL** field controls the “Open conversation in Agent Hive” link; leave it blank
+to use `HIVE_PUBLIC_URL`.
+
+Every agent is subscribed by default. In **Chats**, right-click a conversation
+and choose **Unsubscribe email** to pause its notifications, or **Resubscribe
+email** to turn them back on. The SMTP password is stored in `store.json`; the
+settings API only reports whether a password is saved, never the value itself.
 
 ---
 

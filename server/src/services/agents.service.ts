@@ -25,6 +25,7 @@ export function toPublicAgent(agent: AgentRecord): AgentPublic {
     order: agent.order,
     pinned: agent.pinned,
     unread: agent.unread,
+    emailNotifications: agent.emailNotifications,
     categoryId: agent.categoryId,
     graph: agent.graph,
   };
@@ -130,6 +131,7 @@ export function createAgent(input: RegisterAgentInput): {
     order: maxOrder + 1,
     pinned: false,
     unread: 0,
+    emailNotifications: true,
     categoryId: UNCATEGORIZED_ID,
     graph: initialGraphPosition(store.data.agents.length),
   };
@@ -145,6 +147,7 @@ export interface AgentUpdate {
   task?: string;
   pinned?: boolean;
   unread?: number;
+  emailNotifications?: boolean;
   categoryId?: string;
 }
 
@@ -159,6 +162,10 @@ export function updateAgent(agentId: string, update: AgentUpdate): AgentRecord {
   }
 
   if (update.pinned !== undefined) agent.pinned = update.pinned;
+
+  if (update.emailNotifications !== undefined) {
+    agent.emailNotifications = update.emailNotifications;
+  }
 
   if (update.unread !== undefined) {
     if (!Number.isInteger(update.unread) || update.unread < 0 || update.unread > 999) {

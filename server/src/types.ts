@@ -12,6 +12,7 @@ export interface AgentRecord {
   order: number;
   pinned: boolean;
   unread: number;
+  emailNotifications: boolean;
   categoryId: string;
   graph: { x: number; y: number };
 }
@@ -71,8 +72,28 @@ export interface TokenRecord {
 }
 
 export interface NotificationSettings {
-  email: string | null;
   enabled: boolean;
+  email: string | null;
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string | null;
+  smtpPassword: string | null;
+  smtpFrom: string | null;
+  serverUrl: string | null;
+}
+
+export interface PublicNotificationSettings {
+  enabled: boolean;
+  email: string | null;
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string | null;
+  smtpPasswordSet: boolean;
+  smtpFrom: string | null;
+  serverUrl: string | null;
+  configured: boolean;
 }
 
 export interface StoreData {
@@ -107,6 +128,7 @@ export interface AgentPublic {
   order: number;
   pinned: boolean;
   unread: number;
+  emailNotifications: boolean;
   categoryId: string;
   graph: { x: number; y: number };
 }

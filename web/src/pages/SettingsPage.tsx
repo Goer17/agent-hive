@@ -8,6 +8,7 @@ import { toast } from "../lib/toast";
 import type { ThemeMode } from "../lib/theme";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TokenModal } from "./settings/TokenModal";
+import { EmailSettingsPanel } from "./settings/EmailSettingsPanel";
 
 interface SettingsPageProps {
   themeMode: ThemeMode;
@@ -137,7 +138,9 @@ export function SettingsPage({
           </div>
         </section>
 
-        <div className="settings-section-heading">
+        <EmailSettingsPanel />
+
+        <div className="settings-section-heading email-tokens-heading">
           <h2>Access tokens</h2>
           <button
             type="button"

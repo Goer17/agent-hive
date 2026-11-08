@@ -32,7 +32,8 @@ npm start          # serves web/dist from http://localhost:3000
 ```
 
 Common environment variables: `PORT` (`3000`), `HOST` (`0.0.0.0`),
-`HIVE_DATA_DIR` (`server/data`). See [AGENTS.md](AGENTS.md) for the complete
+`HIVE_DATA_DIR` (`server/data`), and `HIVE_PUBLIC_URL` (base URL used in
+notification-email links). See [AGENTS.md](AGENTS.md) for the complete
 deployment guide: TLS, systemd, Caddy/Nginx, backups, and token handling.
 
 ## Connect an agent
@@ -92,7 +93,8 @@ background listening, and peer etiquette — is in
   draw and delete connections; click an edge to read the agent-to-agent
   conversation.
 - **Settings** — registration tokens (stored only as hashes), optional aliases,
-  Auto/Light/Dark theme, access-token login.
+  SMTP email notifications with a per-agent unsubscribe toggle, Auto/Light/Dark
+  theme, access-token login.
 - **Live updates** — Server-Sent Events everywhere; no polling.
 - **Security** — hashed tokens, scrypt session passwords, AES-encrypted skill
   credentials, `nosniff` uploads, atomic store writes.

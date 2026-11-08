@@ -2852,6 +2852,214 @@ a {
   text-align: center;
 }
 
+.email-tokens-heading {
+  margin-top: 28px;
+}
+
+.settings-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 9px;
+  color: var(--muted-2);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.settings-pill.is-on {
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.email-card {
+  padding: 0;
+}
+
+.email-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 20px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.email-intro-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-outline);
+  border-radius: 9px;
+}
+
+.email-intro-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.email-intro-copy h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.email-intro-copy p {
+  margin: 5px 0 0;
+  color: var(--muted-2);
+  font-size: 9.5px;
+  line-height: 1.55;
+}
+
+.email-enabled,
+.email-inline-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 9.5px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.email-enabled {
+  flex: none;
+  padding-top: 5px;
+}
+
+.email-enabled input,
+.email-inline-check input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.email-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px 18px;
+  padding: 20px;
+}
+
+.email-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.email-field > span,
+.email-field-label {
+  color: var(--muted);
+  font-size: 9.5px;
+  letter-spacing: 0.01em;
+}
+
+.email-field input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  color: var(--text);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 11px;
+}
+
+.email-field input:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+.email-field input:disabled {
+  opacity: 0.55;
+}
+
+.email-field .email-inline-check input {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  margin: 0;
+}
+
+.email-field small {
+  color: var(--muted-2);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.email-field-row {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.email-field-port {
+  flex: none;
+  width: 92px;
+}
+
+.email-secure {
+  flex: 1;
+  min-height: 34px;
+  white-space: nowrap;
+}
+
+.email-clear-password {
+  margin-top: 1px;
+}
+
+.email-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px 0;
+  border-top: 1px solid var(--border);
+}
+
+.email-hint {
+  margin: 0;
+  padding: 12px 20px 18px;
+  color: var(--muted-2);
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.email-hint.is-ready {
+  color: var(--success);
+}
+
+.email-collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.email-collapsed p {
+  margin: 0;
+  color: var(--muted-2);
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.muted-icon {
+  flex: none;
+  color: var(--muted-2);
+}
+
 /* Responsive ------------------------------------------------------------- */
 
 @media (max-width: 1120px) {
@@ -3254,6 +3462,44 @@ a {
   }
 
   .settings-section-heading .button {
+    width: 100%;
+  }
+
+  .email-intro {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+
+  .email-enabled {
+    width: 100%;
+    padding-top: 0;
+  }
+
+  .email-form {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+
+  .email-actions {
+    flex-direction: column-reverse;
+    padding: 16px 16px 0;
+  }
+
+  .email-actions .button {
+    width: 100%;
+  }
+
+  .email-hint {
+    padding: 12px 16px 16px;
+  }
+
+  .email-collapsed {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .email-collapsed .button {
     width: 100%;
   }
 }

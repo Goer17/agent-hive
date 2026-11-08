@@ -1,8 +1,10 @@
 import { HOST, PORT, localAddresses } from "./config.js";
 import { createApp } from "./app.js";
 import { ensureAccessToken } from "./services/auth.service.js";
+import { registerEmailNotificationHandler } from "./services/email.service.js";
 
 const accessToken = ensureAccessToken();
+registerEmailNotificationHandler();
 const app = createApp();
 
 const server = app.listen(PORT, HOST, () => {
