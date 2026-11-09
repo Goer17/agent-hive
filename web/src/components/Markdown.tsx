@@ -6,7 +6,7 @@ import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 import { ImageOff } from "lucide-react";
-import { normalizeTables } from "../lib/markdown";
+import { normalizeTables, remarkPromoteInlineFractions } from "../lib/markdown";
 
 interface MarkdownProps {
   text: string;
@@ -24,7 +24,7 @@ export function Markdown({ text, className }: MarkdownProps): React.JSX.Element 
   return (
     <div className={className ? `markdown-body ${className}` : "markdown-body"}>
       <ReactMarkdown
-        remarkPlugins={[[remarkGfm, { singleTilde: false }], remarkCjkFriendly, remarkMath]}
+        remarkPlugins={[[remarkGfm, { singleTilde: false }], remarkCjkFriendly, remarkMath, remarkPromoteInlineFractions]}
         rehypePlugins={[rehypeKatex]}
         components={{ img: MarkdownImage }}
       >

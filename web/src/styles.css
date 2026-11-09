@@ -1202,12 +1202,20 @@ a {
 
 .markdown-body p {
   margin: 0.55em 0;
+  line-height: 1.85;
 }
 
 /* Keep math close to the body text size so inline formulas do not inflate the
    line box, and give display equations a consistent, scrollable block. */
 .markdown-body .katex {
   font-size: 1.05em;
+  padding: 0 0.08em;
+}
+
+/* Slightly smaller scripts so superscripts/subscripts do not dominate the
+   surrounding Chinese text. Fractions are promoted to display style below. */
+.markdown-body .katex .msupsub {
+  font-size: 0.85em;
 }
 
 .markdown-body .katex-display {

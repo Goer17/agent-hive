@@ -1,3 +1,6 @@
+import type { Root } from "mdast";
+import { visit } from "unist-util-visit";
+
 const DELIMITER_CELL = /^:?-{3,}:?$/;
 
 function splitCells(line: string): string[] {
@@ -107,4 +110,17 @@ export function normalizeTables(source: string): string {
   }
 
   return output.join("\n");
+}
+
+/**
+ * Inline fractions are rendered in text style by KaTeX and look cramped at
+ * chat sizes. Promote bare \frac in inline math to \dfrac so the numerator
+ * and denominator get display-style spacing.
+ */
+export function remarkPromoteInlineFractions() {
+  return (tree: Root) => {
+    visit(tree, "inlineMath", (node) => {
+      node.value = node.value.replace(/\\frac(?![A-Za-z])/g, "\\dfrac");
+    });
+  };
 }
