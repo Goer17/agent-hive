@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ImageOff } from "lucide-react";
+import { normalizeTables } from "../lib/markdown";
 
 interface MarkdownProps {
   text: string;
@@ -22,7 +23,7 @@ export function Markdown({ text, className }: MarkdownProps): React.JSX.Element 
         remarkPlugins={[[remarkGfm, { singleTilde: false }]]}
         components={{ img: MarkdownImage }}
       >
-        {text}
+        {normalizeTables(text)}
       </ReactMarkdown>
     </div>
   );
