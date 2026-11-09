@@ -112,15 +112,77 @@ export function normalizeTables(source: string): string {
   return output.join("\n");
 }
 
+function matchingBrace(source: string, start: number): number {
+  let depth = 0;
+  for (let index = start; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "\\") {
+      index += 1;
+      continue;
+    }
+    if (char === "{") depth += 1;
+    else if (char === "}") {
+      depth -= 1;
+      if (depth === 0) return index;
+    }
+  }
+  return -1;
+}
+
 /**
- * Inline fractions are rendered in text style by KaTeX and look cramped at
- * chat sizes. Promote bare \frac in inline math to \dfrac so the numerator
- * and denominator get display-style spacing.
+ * KaTeX's text-style inline fractions are cramped at chat sizes. Promote
+ * inline \\frac/\\dfrac to \\dfrac and add a small zero-width rule above the
+ * denominator so it does not touch the fraction bar.
  */
+export function addFractionSpacing(source: string): string {
+  let output = "";
+  let index = 0;
+  while (index < source.length) {
+    const match = /^\\(frac|dfrac)(?![A-Za-z])/.exec(source.slice(index));
+    if (!match) {
+      output += source[index] ?? "";
+      index += 1;
+      continue;
+    }
+
+    let cursor = index + match[0].length;
+    while (/\s/.test(source[cursor] ?? "")) cursor += 1;
+    if (source[cursor] !== "{") {
+      output += source.slice(index, cursor);
+      index = cursor;
+      continue;
+    }
+    const numeratorEnd = matchingBrace(source, cursor);
+    if (numeratorEnd === -1) {
+      output += source.slice(index);
+      break;
+    }
+
+    let afterNumerator = numeratorEnd + 1;
+    while (/\s/.test(source[afterNumerator] ?? "")) afterNumerator += 1;
+    if (source[afterNumerator] !== "{") {
+      output += source.slice(index, afterNumerator);
+      index = afterNumerator;
+      continue;
+    }
+    const denominatorEnd = matchingBrace(source, afterNumerator);
+    if (denominatorEnd === -1) {
+      output += source.slice(index);
+      break;
+    }
+
+    const numerator = addFractionSpacing(source.slice(cursor + 1, numeratorEnd));
+    const denominator = addFractionSpacing(source.slice(afterNumerator + 1, denominatorEnd));
+    output += `\\dfrac{${numerator}}{\\rule{0pt}{0.3em}${denominator}}`;
+    index = denominatorEnd + 1;
+  }
+  return output;
+}
+
 export function remarkPromoteInlineFractions() {
   return (tree: Root) => {
     visit(tree, "inlineMath", (node) => {
-      node.value = node.value.replace(/\\frac(?![A-Za-z])/g, "\\dfrac");
+      node.value = addFractionSpacing(node.value);
     });
   };
 }
