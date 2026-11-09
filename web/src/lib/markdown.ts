@@ -73,40 +73,35 @@ export function normalizeTables(source: string): string {
       continue;
     }
 
-    if (!isTableRow(line) || isDelimiterRow(line)) {
+    if (!isTableRow(line)) {
       output.push(line);
       continue;
     }
 
-    // Collect the header plus any following data rows.
-    const rows: string[] = [];
+    // Consume the whole contiguous table block, including its delimiter row.
+    // Handling data rows here avoids treating them as a second table.
+    const block: string[] = [];
     let next = index;
-    while (next < lines.length) {
-      const candidate = lines[next] ?? "";
-      if (!isTableRow(candidate) || isDelimiterRow(candidate)) break;
-      rows.push(candidate);
+    while (next < lines.length && isTableRow(lines[next] ?? "")) {
+      block.push(lines[next] ?? "");
       next += 1;
     }
 
-    const hasDelimiter = next < lines.length && isDelimiterRow(lines[next] ?? "");
-    if (hasDelimiter) {
-      const previous = output[output.length - 1] ?? "";
-      if (previous.trim() !== "") output.push("");
+    if (block.length < 2) {
       output.push(line);
       continue;
     }
 
-    if (rows.length >= 2) {
-      const previous = output[output.length - 1] ?? "";
-      if (previous.trim() !== "") output.push("");
-      const header = rows[0] ?? "";
-      output.push(header, delimiterFor(header));
-      for (let row = 1; row < rows.length; row += 1) output.push(rows[row] ?? "");
-      index = next - 1;
-      continue;
-    }
+    const previous = output[output.length - 1] ?? "";
+    if (previous.trim() !== "") output.push("");
 
-    output.push(line);
+    if (block.some((row) => isDelimiterRow(row))) {
+      output.push(...block);
+    } else {
+      const header = block[0] ?? "";
+      output.push(header, delimiterFor(header), ...block.slice(1));
+    }
+    index = next - 1;
   }
 
   return output.join("\n");
