@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkCjkFriendly from "remark-cjk-friendly";
 import { ImageOff } from "lucide-react";
 import { normalizeTables } from "../lib/markdown";
 
@@ -20,7 +21,7 @@ export function Markdown({ text, className }: MarkdownProps): React.JSX.Element 
   return (
     <div className={className ? `markdown-body ${className}` : "markdown-body"}>
       <ReactMarkdown
-        remarkPlugins={[[remarkGfm, { singleTilde: false }]]}
+        remarkPlugins={[[remarkGfm, { singleTilde: false }], remarkCjkFriendly]}
         components={{ img: MarkdownImage }}
       >
         {normalizeTables(text)}
