@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { badRequest, clampInt, HttpError, queryString, requestOrigin } from "../lib/http.js";
+import { badRequest, clampInt, HttpError, queryString, serverOrigin } from "../lib/http.js";
 import { events } from "../lib/events.js";
 import { publicFile, sendStoredFile } from "../lib/files.js";
 import { discardUpload, discardUploads, fileFromRequest, filesFromRequest } from "../lib/uploads.js";
@@ -64,7 +64,7 @@ agentApiRouter.post("/register", async (request, response) => {
   });
   agent.unread = Math.min(999, agent.unread + 1);
   store.save();
-  await notifyUserMessage({ agent, message: registrationMessage, serverUrl: requestOrigin(request) });
+  await notifyUserMessage({ agent, message: registrationMessage, serverUrl: serverOrigin(request) });
 
   events.emit({
     type: "message",
@@ -234,7 +234,7 @@ agentApiRouter.post(
       if (resolved.type === "user") {
         agent.unread = Math.min(999, agent.unread + 1);
         store.save();
-        await notifyUserMessage({ agent, message, serverUrl: requestOrigin(request) });
+        await notifyUserMessage({ agent, message, serverUrl: serverOrigin(request) });
       }
 
       events.emit({

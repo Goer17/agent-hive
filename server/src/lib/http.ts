@@ -1,3 +1,5 @@
+import { localAddresses } from "../config.js";
+
 export class HttpError extends Error {
   readonly status: number;
 
@@ -42,6 +44,24 @@ export function clampInt(
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, parsed));
+}
+
+/** Like requestOrigin, but replace localhost/loopback with the first local IPv4. */
+export function serverOrigin(request: import("express").Request): string {
+  const origin = requestOrigin(request);
+  try {
+    const url = new URL(origin);
+    if (["localhost", "127.0.0.1", "::1", "[::1]"].includes(url.hostname)) {
+      const [address] = localAddresses();
+      if (address) {
+        url.hostname = address;
+        return url.origin;
+      }
+    }
+  } catch {
+    // Fall through to the raw origin.
+  }
+  return origin;
 }
 
 /** Public origin of the incoming request, honouring reverse-proxy headers. */

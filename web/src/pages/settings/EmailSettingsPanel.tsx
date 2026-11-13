@@ -254,7 +254,7 @@ export function EmailSettingsPanel(): React.JSX.Element {
 
                   <div className="email-field">
                     <span>Server URL</span>
-                    <p className="email-auto-value">{window.location.origin}</p>
+                    <p className="email-auto-value">{settings?.serverUrl || window.location.origin}</p>
                     <small>Detected automatically from this address; used for links in emails.</small>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
-import { PORT } from "../config.js";
+import { localServerUrl } from "../config.js";
 import { badRequest } from "../lib/http.js";
 import { store } from "../store/store.js";
 import type {
@@ -21,7 +21,7 @@ const HARNESS_LABELS: Record<string, string> = {
   dsh: "DSH",
 };
 
-const DEFAULT_SERVER_URL = `http://localhost:${PORT}`;
+const DEFAULT_SERVER_URL = localServerUrl();
 
 export interface EmailSettingsUpdate {
   enabled: boolean;

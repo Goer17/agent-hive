@@ -25,6 +25,11 @@ export const ACCESS_TOKEN_ENV = process.env.HIVE_ACCESS_TOKEN?.trim() || null;
 export const AVATAR_COUNT = 24;
 export const UNCATEGORIZED_ID = "uncategorized";
 
+export function localServerUrl(port: number = PORT): string {
+  const [address] = localAddresses();
+  return address ? `http://${address}:${port}` : `http://localhost:${port}`;
+}
+
 export function localAddresses(): string[] {
   const addresses = new Set<string>();
   for (const entries of Object.values(os.networkInterfaces())) {
