@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { requireBrowserAuth } from "../middleware/auth.js";
+import { requestOrigin } from "../lib/http.js";
 import {
   sendTestEmail,
   toPublicNotificationSettings,
@@ -24,20 +25,26 @@ const emailSettingsSchema = z.object({
   serverUrl: z.string().trim().max(500).default(""),
 });
 
-settingsRouter.get("/email", (_request, response) => {
-  response.json({
-    settings: toPublicNotificationSettings(store.data.settings.notifications),
-  });
+settingsRouter.get("/email", (request, response) => {
+  // Auto-detect the server address from the address the browser is using.
+  const origin = requestOrigin(request);
+  const settings = store.data.settings.notifications;
+  if (settings.serverUrl !== origin) {
+    settings.serverUrl = origin;
+    store.save();
+  }
+  response.json({ settings: toPublicNotificationSettings(settings) });
 });
 
 settingsRouter.put("/email", (request, response) => {
   const body = emailSettingsSchema.parse(request.body);
-  const settings = updateEmailSettings(body);
+  // The UI no longer asks for this: use the address the browser is on.
+  const settings = updateEmailSettings({ ...body, serverUrl: requestOrigin(request) });
   response.json({ settings: toPublicNotificationSettings(settings) });
 });
 
 settingsRouter.post("/email/test", async (request, response) => {
   const body = emailSettingsSchema.parse(request.body);
-  await sendTestEmail(body);
+  await sendTestEmail({ ...body, serverUrl: requestOrigin(request) }, requestOrigin(request));
   response.json({ sent: true });
 });

@@ -88,15 +88,21 @@ function formatFileSize(size: number): string {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function baseUrl(settings: NotificationSettings): string {
+function baseUrl(settings: NotificationSettings, fallbackServerUrl?: string): string {
   const setting = settings.serverUrl?.trim().replace(/\/+$/, "");
   if (setting) return setting;
   const environment = process.env.HIVE_PUBLIC_URL?.trim().replace(/\/+$/, "");
-  return environment || DEFAULT_SERVER_URL;
+  if (environment) return environment;
+  const fallback = fallbackServerUrl?.trim().replace(/\/+$/, "");
+  return fallback || DEFAULT_SERVER_URL;
 }
 
-export function chatUrl(settings: NotificationSettings, agentId: string): string {
-  return `${baseUrl(settings)}/#/chat?agent=${encodeURIComponent(agentId)}`;
+export function chatUrl(
+  settings: NotificationSettings,
+  agentId: string,
+  fallbackServerUrl?: string,
+): string {
+  return `${baseUrl(settings, fallbackServerUrl)}/#/chat?agent=${encodeURIComponent(agentId)}`;
 }
 
 export function toPublicNotificationSettings(
@@ -218,16 +224,18 @@ function messageContent(
   settings: NotificationSettings,
   agent: AgentRecord,
   message: MessageRecord,
+  fallbackServerUrl?: string,
 ): MailContent {
   const time = formatEmailTime(message.createdAt);
   const name = `${agent.name} (${harnessLabel(agent.harness)})`;
   const from = `${agent.host}:${agent.workspace}`;
-  const url = chatUrl(settings, agent.sessionId);
+  const base = baseUrl(settings, fallbackServerUrl);
+  const url = `${base}/#/chat?agent=${encodeURIComponent(agent.sessionId)}`;
   const content = message.text || "(no text)";
   const files = message.files.map((file) => ({
     name: file.name,
     size: formatFileSize(file.size),
-    url: `${baseUrl(settings)}/api/files/${encodeURIComponent(file.id)}?download=1`,
+    url: `${base}/api/files/${encodeURIComponent(file.id)}?download=1`,
   }));
 
   const textLines = [
@@ -292,12 +300,15 @@ function messageContent(
   };
 }
 
-export async function sendTestEmail(update: EmailSettingsUpdate): Promise<void> {
+export async function sendTestEmail(
+  update: EmailSettingsUpdate,
+  requestServerUrl?: string,
+): Promise<void> {
   const settings = mergeSettings(update);
   if (!configured(settings)) {
     badRequest("Set the recipient, SMTP host, and sender address before sending a test email.");
   }
-  const url = settings.serverUrl ?? DEFAULT_SERVER_URL;
+  const url = settings.serverUrl ?? requestServerUrl ?? DEFAULT_SERVER_URL;
   const html = `<!doctype html>
 <html>
   <body style="margin:0;padding:24px;background:#f4f3f0;color:#1c1917;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
@@ -321,19 +332,20 @@ async function deliverMessageEmail(
   settings: NotificationSettings,
   agent: AgentRecord,
   message: MessageRecord,
+  fallbackServerUrl?: string,
 ): Promise<void> {
-  await sendMail(settings, messageContent(settings, agent, message));
+  await sendMail(settings, messageContent(settings, agent, message, fallbackServerUrl));
 }
 
 export function registerEmailNotificationHandler(): void {
-  registerNotificationHandler(({ agent, message }) => {
+  registerNotificationHandler(({ agent, message, serverUrl }) => {
     const settings = store.data.settings.notifications;
     if (!settings.enabled || !configured(settings)) return;
     if (agent.emailNotifications === false) return;
 
     // Do not make the agent wait on SMTP. Failures are logged and never affect
     // message delivery.
-    void deliverMessageEmail(settings, agent, message).catch((error: unknown) => {
+    void deliverMessageEmail(settings, agent, message, serverUrl).catch((error: unknown) => {
       console.error(
         `Email notification for agent ${agent.name} failed:`,
         error instanceof Error ? error.message : error,

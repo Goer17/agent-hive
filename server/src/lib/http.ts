@@ -44,6 +44,15 @@ export function clampInt(
   return Math.min(max, Math.max(min, parsed));
 }
 
+/** Public origin of the incoming request, honouring reverse-proxy headers. */
+export function requestOrigin(request: import("express").Request): string {
+  const forwardedProto = request.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const forwardedHost = request.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const proto = forwardedProto || request.protocol || "http";
+  const host = forwardedHost || request.get("host") || request.hostname || "localhost";
+  return `${proto}://${host}`.replace(/\/+$/, "");
+}
+
 export function uniqueStrings(values: string[]): string[] {
   return [...new Set(values)];
 }

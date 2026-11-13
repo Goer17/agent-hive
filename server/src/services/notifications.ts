@@ -3,6 +3,8 @@ import type { AgentRecord, MessageRecord } from "../types.js";
 export interface UserMessageNotification {
   agent: AgentRecord;
   message: MessageRecord;
+  /** Origin of the request that produced the message, used as a fallback. */
+  serverUrl?: string;
 }
 
 type NotificationHandler = (event: UserMessageNotification) => void | Promise<void>;

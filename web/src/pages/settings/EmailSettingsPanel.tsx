@@ -12,7 +12,6 @@ interface EmailFormState {
   smtpSecure: boolean;
   smtpUser: string;
   smtpFrom: string;
-  serverUrl: string;
 }
 
 const EMPTY_FORM: EmailFormState = {
@@ -23,7 +22,6 @@ const EMPTY_FORM: EmailFormState = {
   smtpSecure: false,
   smtpUser: "",
   smtpFrom: "",
-  serverUrl: "",
 };
 
 function formFromSettings(settings: EmailNotificationSettings): EmailFormState {
@@ -35,7 +33,6 @@ function formFromSettings(settings: EmailNotificationSettings): EmailFormState {
     smtpSecure: settings.smtpSecure,
     smtpUser: settings.smtpUser ?? "",
     smtpFrom: settings.smtpFrom ?? "",
-    serverUrl: settings.serverUrl ?? "",
   };
 }
 
@@ -53,7 +50,9 @@ function inputFromForm(
     smtpSecure: form.smtpSecure,
     smtpUser: form.smtpUser.trim(),
     smtpFrom: form.smtpFrom.trim(),
-    serverUrl: form.serverUrl.trim(),
+    // The server overrides this with the request origin; keep a value for the
+    // API type and for older servers.
+    serverUrl: window.location.origin,
     ...(password.trim() ? { smtpPassword: password } : {}),
     ...(clearPassword ? { clearPassword: true } : {}),
   };
@@ -253,16 +252,11 @@ export function EmailSettingsPanel(): React.JSX.Element {
                     ) : null}
                   </div>
 
-                  <label className="email-field">
+                  <div className="email-field">
                     <span>Server URL</span>
-                    <input
-                      value={form.serverUrl}
-                      onChange={(event) => update("serverUrl", event.target.value)}
-                      placeholder={window.location.origin}
-                      autoComplete="url"
-                    />
-                    <small>Used for the “Open conversation” link in each email.</small>
-                  </label>
+                    <p className="email-auto-value">{window.location.origin}</p>
+                    <small>Detected automatically from this address; used for links in emails.</small>
+                  </div>
                 </div>
 
                 <div className="email-actions">
