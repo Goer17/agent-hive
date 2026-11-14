@@ -15,6 +15,7 @@ import {
   listAgentConversation,
   listAgentConversationAfter,
   markAgentConversationRead,
+  unreadConversations,
   unreadSummary,
   userConversation,
 } from "../services/messages.service.js";
@@ -253,6 +254,7 @@ agentApiRouter.post(
       response.status(201).json({
         ok: true,
         message: agentMessagePayload(message),
+        unread: unreadConversations(agent.sessionId),
       });
     } catch (error) {
       discardUploads(request);

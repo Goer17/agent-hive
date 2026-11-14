@@ -170,6 +170,54 @@ export function unreadSummary(agentId: string, target?: string): UnreadSummary {
   return { unreadCount, latest };
 }
 
+export interface UnreadConversation {
+  target: string;
+  name: string;
+  type: "user" | "agent";
+  count: number;
+  latestAt: string;
+}
+
+export interface UnreadConversations {
+  count: number;
+  conversations: UnreadConversation[];
+}
+
+/** Unread incoming messages grouped by conversation, newest conversation first. */
+export function unreadConversations(agentId: string): UnreadConversations {
+  const byTarget = new Map<string, UnreadConversation>();
+
+  for (const message of store.data.messages) {
+    if (message.read) continue;
+    const target = incomingTargetForAgent(message, agentId);
+    if (!target) continue;
+
+    const existing = byTarget.get(target);
+    if (existing) {
+      existing.count += 1;
+      existing.latestAt = message.createdAt;
+      continue;
+    }
+
+    const peer = target === "user" ? null : store.data.agents.find((agent) => agent.sessionId === target);
+    byTarget.set(target, {
+      target,
+      name: target === "user" ? "user" : peer?.name ?? target,
+      type: target === "user" ? "user" : "agent",
+      count: 1,
+      latestAt: message.createdAt,
+    });
+  }
+
+  const conversations = [...byTarget.values()].sort((left, right) =>
+    right.latestAt.localeCompare(left.latestAt),
+  );
+  return {
+    count: conversations.reduce((sum, conversation) => sum + conversation.count, 0),
+    conversations,
+  };
+}
+
 export function markAgentConversationRead(
   agentId: string,
   target: string,
