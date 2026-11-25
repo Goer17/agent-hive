@@ -83,6 +83,10 @@ export interface NotificationSettings {
   serverUrl: string | null;
 }
 
+export interface UploadSettings {
+  maxFileSizeMb: number;
+}
+
 export interface PublicNotificationSettings {
   enabled: boolean;
   email: string | null;
@@ -113,6 +117,7 @@ export interface StoreData {
   usedAgentNames: string[];
   settings: {
     notifications: NotificationSettings;
+    uploads: UploadSettings;
   };
 }
 

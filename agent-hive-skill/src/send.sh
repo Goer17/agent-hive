@@ -13,8 +13,9 @@ usage() {
 Usage: send.sh [--session_id TARGET] (--text TEXT | --text-file PATH) [--file PATH]...
 
 Send a message and/or files to the user or to a connected agent. TARGET
-defaults to "user". Each file is limited to 200 MB; one message can carry up to
-10 files and 200 MB total. Repeat --file to attach several files:
+defaults to "user". The size limit comes from the server Settings page
+(default 200 MB); one message can carry up to 10 files. Repeat --file to attach
+several files:
 
   ./send.sh --text "Two tables attached." --file a.png --file b.png
 
@@ -87,17 +88,33 @@ if [[ ${#files[@]} -gt "$MAX_ATTACHMENTS" ]]; then
   die "a message supports at most $MAX_ATTACHMENTS files"
 fi
 
+load_session
+assert_contact "$target"
+
+# The limits are configurable in Settings. Fall back to the skill defaults if
+# an older server does not expose the endpoint.
+limits_json="$(http_get "/api/agent/limits" 2>/dev/null || true)"
+if [[ -n "$limits_json" ]]; then
+  server_max="$(json_field max_file_size "$limits_json" 2>/dev/null || true)"
+  server_total="$(json_field max_total_file_size "$limits_json" 2>/dev/null || true)"
+  if [[ "$server_max" =~ ^[0-9]+$ ]] && [[ "$server_max" -gt 0 ]]; then
+    MAX_FILE_SIZE="$server_max"
+  fi
+  if [[ "$server_total" =~ ^[0-9]+$ ]] && [[ "$server_total" -gt 0 ]]; then
+    MAX_TOTAL_FILE_SIZE="$server_total"
+  fi
+fi
+
 total_file_size=0
 for attached_file in ${files[@]+"${files[@]}"}; do
   [[ -f "$attached_file" ]] || die "file not found: $attached_file"
   file_size="$(wc -c <"$attached_file" | tr -d '[:space:]')"
-  [[ "$file_size" -le "$MAX_FILE_SIZE" ]] || die "file exceeds the 200 MB limit: $attached_file"
+  max_mb=$((MAX_FILE_SIZE / 1024 / 1024))
+  [[ "$file_size" -le "$MAX_FILE_SIZE" ]] || die "file exceeds the ${max_mb} MB limit: $attached_file"
   total_file_size=$((total_file_size + file_size))
 done
-[[ "$total_file_size" -le "$MAX_TOTAL_FILE_SIZE" ]] || die "attachments exceed the 200 MB total limit"
-
-load_session
-assert_contact "$target"
+total_mb=$((MAX_TOTAL_FILE_SIZE / 1024 / 1024))
+[[ "$total_file_size" -le "$MAX_TOTAL_FILE_SIZE" ]] || die "attachments exceed the ${total_mb} MB total limit"
 
 tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
@@ -135,7 +152,7 @@ if [[ "$text_from_file" == "1" && -n "$text" ]]; then
           *) die "unsupported remote image type (${content_type:-unknown}): $image_ref" ;;
         esac
         download_size="$(wc -c <"$download_path" | tr -d '[:space:]')"
-        [[ "$download_size" -le "$MAX_FILE_SIZE" ]] || die "remote image exceeds the 200 MB limit: $image_ref"
+        [[ "$download_size" -le "$MAX_FILE_SIZE" ]] || die "remote image exceeds the $((MAX_FILE_SIZE / 1024 / 1024)) MB limit: $image_ref"
         upload_path="$tmpdir/remote-image-$remote_index.$extension"
         mv "$download_path" "$upload_path"
       else
@@ -149,7 +166,7 @@ if [[ "$text_from_file" == "1" && -n "$text" ]]; then
         esac
 
         image_size="$(wc -c <"$image_ref" | tr -d '[:space:]')"
-        [[ "$image_size" -le "$MAX_FILE_SIZE" ]] || die "image exceeds the 200 MB limit: $image_ref"
+        [[ "$image_size" -le "$MAX_FILE_SIZE" ]] || die "image exceeds the $((MAX_FILE_SIZE / 1024 / 1024)) MB limit: $image_ref"
         upload_path="$image_ref"
       fi
 

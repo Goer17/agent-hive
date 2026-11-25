@@ -12,6 +12,21 @@ import { store } from "../store/store.js";
 export const settingsRouter = Router();
 settingsRouter.use(requireBrowserAuth);
 
+const uploadSettingsSchema = z.object({
+  maxFileSizeMb: z.number().int().min(1).max(1024),
+});
+
+settingsRouter.get("/uploads", (_request, response) => {
+  response.json({ settings: store.data.settings.uploads });
+});
+
+settingsRouter.put("/uploads", (request, response) => {
+  const body = uploadSettingsSchema.parse(request.body);
+  store.data.settings.uploads = body;
+  store.save();
+  response.json({ settings: store.data.settings.uploads });
+});
+
 const emailSettingsSchema = z.object({
   enabled: z.boolean(),
   email: z.string().trim().max(320).default(""),

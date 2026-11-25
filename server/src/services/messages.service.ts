@@ -1,4 +1,5 @@
-import { MAX_FILES, MAX_TEXT_LENGTH, MAX_TOTAL_FILE_SIZE } from "../config.js";
+import { MAX_FILES, MAX_TEXT_LENGTH } from "../config.js";
+import { maxFileSizeBytes } from "../store/store.js";
 import { newId } from "../lib/crypto.js";
 import { publicFile, removeStoredFile } from "../lib/files.js";
 import { badRequest } from "../lib/http.js";
@@ -32,8 +33,8 @@ export function createMessage(input: CreateMessageInput): MessageRecord {
     badRequest(`A message supports at most ${MAX_FILES} files.`);
   }
   const totalFileSize = files.reduce((sum, file) => sum + file.size, 0);
-  if (totalFileSize > MAX_TOTAL_FILE_SIZE) {
-    badRequest("Attachments must total at most 200 MB.");
+  if (totalFileSize > maxFileSizeBytes()) {
+    badRequest(`Attachments must total at most ${Math.round(maxFileSizeBytes() / (1024 * 1024))} MB.`);
   }
   if (text.length > MAX_TEXT_LENGTH) {
     badRequest(`Text must be at most ${MAX_TEXT_LENGTH} characters.`);

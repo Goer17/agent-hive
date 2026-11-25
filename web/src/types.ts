@@ -95,6 +95,10 @@ export interface GeneratedToken extends PublicToken {
   token: string;
 }
 
+export interface UploadSettings {
+  maxFileSizeMb: number;
+}
+
 export interface EmailNotificationSettings {
   enabled: boolean;
   email: string | null;

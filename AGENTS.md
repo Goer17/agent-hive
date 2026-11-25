@@ -168,7 +168,7 @@ server {
     ssl_certificate     /etc/letsencrypt/live/hive.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/hive.example.com/privkey.pem;
 
-    client_max_body_size 200m;  # skill upload limit is 200 MB
+    client_max_body_size 200m;  # skill default upload limit is 200 MB
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -325,7 +325,7 @@ cd /opt/agent-hive/agent-hive-skill
 `--text-file` downloads or uploads absolute-path and `http(s)` image links,
 rewrites them to `/api/files/<id>`, and sends the Markdown. Remote images must
 return `image/png`, `image/jpeg`, `image/gif`, `image/webp`, or `image/avif`;
-size limit 200 MB, download timeout 60 s.
+size limit configured in Settings (200 MB default), download timeout 60 s.
 
 ### 8.7 Listen in the background (recommended)
 

@@ -3,6 +3,7 @@ import type {
   EdgeMessagesResponse,
   EmailNotificationSettings,
   EmailSettingsInput,
+  UploadSettings,
   GeneratedToken,
   Message,
   PublicToken,
@@ -150,6 +151,14 @@ export const api = {
     }),
   deleteToken: (id: string) =>
     request<{ deleted: boolean }>(`/api/tokens/${id}`, { method: "DELETE" }),
+
+  uploadSettings: async () =>
+    (await request<{ settings: UploadSettings }>("/api/settings/uploads")).settings,
+  updateUploadSettings: async (settings: UploadSettings) =>
+    (await request<{ settings: UploadSettings }>("/api/settings/uploads", {
+      method: "PUT",
+      body: settings,
+    })).settings,
 
   emailSettings: async () =>
     (await request<{ settings: EmailNotificationSettings }>("/api/settings/email"))

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { DATA_DIR, UPLOAD_DIR, UNCATEGORIZED_ID } from "../config.js";
-import type { NotificationSettings, StoreData } from "../types.js";
+import type { NotificationSettings, StoreData, UploadSettings } from "../types.js";
 
 const STORE_FILE = path.join(DATA_DIR, "store.json");
 
@@ -16,6 +16,23 @@ function defaultNotifications(): NotificationSettings {
     smtpPassword: null,
     smtpFrom: null,
     serverUrl: null,
+  };
+}
+
+const DEFAULT_MAX_FILE_SIZE_MB = 200;
+const MAX_CONFIGURED_FILE_SIZE_MB = 1024;
+
+function defaultUploads(): UploadSettings {
+  return { maxFileSizeMb: DEFAULT_MAX_FILE_SIZE_MB };
+}
+
+function normalizeUploads(value: unknown): UploadSettings {
+  const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const mb = Math.round(Number(raw.maxFileSizeMb));
+  return {
+    maxFileSizeMb: Number.isFinite(mb) && mb > 0
+      ? Math.min(MAX_CONFIGURED_FILE_SIZE_MB, Math.max(1, mb))
+      : DEFAULT_MAX_FILE_SIZE_MB,
   };
 }
 
@@ -62,6 +79,7 @@ function freshStore(): StoreData {
     usedAgentNames: [],
     settings: {
       notifications: defaultNotifications(),
+      uploads: defaultUploads(),
     },
   };
 }
@@ -111,8 +129,9 @@ function loadStore(): StoreData {
   data.categories ??= [];
   data.tokens ??= [];
   data.usedAgentNames ??= [];
-  data.settings ??= { notifications: defaultNotifications() };
+  data.settings ??= { notifications: defaultNotifications(), uploads: defaultUploads() };
   data.settings.notifications = normalizeNotifications(data.settings.notifications);
+  data.settings.uploads = normalizeUploads(data.settings.uploads);
 
   const missingReadFlags = data.messages.some(
     (message) => typeof (message as { read?: unknown }).read !== "boolean",
@@ -192,4 +211,13 @@ class Store {
 }
 
 export const store = new Store();
+
+export function maxFileSizeMb(): number {
+  return store.data.settings.uploads.maxFileSizeMb;
+}
+
+export function maxFileSizeBytes(): number {
+  return maxFileSizeMb() * 1024 * 1024;
+}
+
 export { STORE_FILE };

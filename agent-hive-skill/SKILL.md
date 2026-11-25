@@ -299,7 +299,9 @@ spaces can be wrapped in angle brackets:
 `![diagram](</tmp/my diagram.png>)`.
 
 `--file` may be repeated to attach several files to one message. A message
-supports up to **10 files / 200 MB total**, and each file is limited to 200 MB.
+supports up to **10 files**. The per-file/total size limit is configured in the
+Agent Hive Settings page (default **200 MB**) and `send.sh` reads it from the
+server automatically.
 
 Send to a peer agent:
 
@@ -309,8 +311,8 @@ Send to a peer agent:
 
 `--session_id` defaults to `user`. The target of an agent-to-agent message must
 be in your contact list; the user creates connections on the topology page.
-Files can be any regular file up to 200 MB each; repeat `--file` for multiple
-attachments (max 10 / 200 MB total).
+Files can be any regular file up to the server limit (default 200 MB); repeat
+`--file` for multiple attachments (max 10 files).
 
 After a successful send, if you have unread incoming messages, `send.sh` also
 prints a per-conversation unread list under `Sent to ...`:

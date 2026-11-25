@@ -6,7 +6,7 @@ import { publicFile, sendStoredFile } from "../lib/files.js";
 import { discardUpload, discardUploads, fileFromRequest, filesFromRequest } from "../lib/uploads.js";
 import { store } from "../store/store.js";
 import { requireAgentAuth, type AgentRequest } from "../middleware/auth.js";
-import { messageUpload, upload } from "../middleware/upload.js";
+import { messageUpload, uploadSingle } from "../middleware/upload.js";
 import { createAgent } from "../services/agents.service.js";
 import {
   agentCanAccessFile,
@@ -100,6 +100,15 @@ agentApiRouter.get("/me", (request, response) => {
     host: agent.host,
     workspace: agent.workspace,
     task: agent.task,
+  });
+});
+
+agentApiRouter.get("/limits", (_request, response) => {
+  const settings = store.data.settings.uploads;
+  response.json({
+    max_file_size_mb: settings.maxFileSizeMb,
+    max_file_size: settings.maxFileSizeMb * 1024 * 1024,
+    max_total_file_size: settings.maxFileSizeMb * 1024 * 1024,
   });
 });
 
@@ -263,7 +272,7 @@ agentApiRouter.post(
   },
 );
 
-agentApiRouter.post("/files", upload.single("file"), (request, response, next) => {
+agentApiRouter.post("/files", uploadSingle("file"), (request, response, next) => {
   try {
     const file = fileFromRequest(request);
     if (!file) badRequest("A file is required.");

@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import type { Agent, Message } from "../../types";
+import { api } from "../../api/client";
 import { Avatar } from "../../components/Avatar";
 import { HiveMark } from "../../components/HiveMark";
 import { formatFileSize } from "../../lib/format";
@@ -22,9 +23,7 @@ import { AgentInfoPopover } from "./AgentInfoPopover";
 import { HarnessIcon } from "../../components/HarnessIcon";
 import { MessageBubble } from "./MessageBubble";
 
-const MAX_FILE_SIZE = 200 * 1024 * 1024;
 const MAX_FILES = 10;
-const MAX_TOTAL_FILE_SIZE = 200 * 1024 * 1024;
 
 function ComposerFile({
   file,
@@ -95,6 +94,7 @@ export function ChatWindow({
 }: ChatWindowProps): React.JSX.Element {
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  const [maxFileSizeMb, setMaxFileSizeMb] = useState(200);
   const [infoOpen, setInfoOpen] = useState(false);
   const [localSending, setLocalSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -108,10 +108,26 @@ export function ChatWindow({
   const wasLoadingOlderRef = useRef(false);
 
   const busy = sending || localSending;
+  const maxFileSizeBytes = maxFileSizeMb * 1024 * 1024;
 
   useEffect(() => {
     if (!agent) setInfoOpen(false);
   }, [agent]);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .uploadSettings()
+      .then((settings) => {
+        if (!cancelled) setMaxFileSizeMb(settings.maxFileSizeMb);
+      })
+      .catch(() => {
+        // Keep the 200 MB fallback if settings cannot be loaded.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -188,8 +204,8 @@ export function ChatWindow({
   }
 
   function addFiles(selected: File[]): void {
-    const valid = selected.filter((candidate) => candidate.size <= MAX_FILE_SIZE);
-    if (valid.length < selected.length) toast("Some files exceed the 200 MB limit.");
+    const valid = selected.filter((candidate) => candidate.size <= maxFileSizeBytes);
+    if (valid.length < selected.length) toast(`Some files exceed the ${maxFileSizeMb} MB limit.`);
     if (valid.length === 0) return;
 
     const next = [...files, ...valid];
@@ -197,8 +213,8 @@ export function ChatWindow({
       toast(`A message supports at most ${MAX_FILES} files.`);
       return;
     }
-    if (next.reduce((total, candidate) => total + candidate.size, 0) > MAX_TOTAL_FILE_SIZE) {
-      toast("Attachments must total at most 200 MB.");
+    if (next.reduce((total, candidate) => total + candidate.size, 0) > maxFileSizeBytes) {
+      toast(`Attachments must total at most ${maxFileSizeMb} MB.`);
       return;
     }
     setFiles(next);

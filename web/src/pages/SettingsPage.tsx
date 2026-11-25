@@ -9,6 +9,7 @@ import type { ThemeMode } from "../lib/theme";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { TokenModal } from "./settings/TokenModal";
 import { EmailSettingsPanel } from "./settings/EmailSettingsPanel";
+import { UploadSettingsPanel } from "./settings/UploadSettingsPanel";
 
 interface SettingsPageProps {
   themeMode: ThemeMode;
@@ -137,6 +138,8 @@ export function SettingsPage({
             })}
           </div>
         </section>
+
+        <UploadSettingsPanel />
 
         <EmailSettingsPanel />
 

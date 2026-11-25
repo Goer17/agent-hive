@@ -2800,6 +2800,59 @@ a {
   border-radius: 14px;
 }
 
+.upload-settings-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+}
+.upload-settings-copy h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+.upload-settings-copy p {
+  margin: 5px 0 0;
+  color: var(--muted-2);
+  font-size: 9.5px;
+}
+.upload-settings-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.upload-size-field { display: flex; flex-direction: column; gap: 5px; }
+.upload-size-field > span {
+  color: var(--muted-2);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.upload-size-input {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  height: 31px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.upload-size-input input {
+  width: 58px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.upload-size-input input:focus { box-shadow: none; }
+.upload-size-input span { color: var(--muted-2); font-size: 9px; }
+
 .settings-loading {
   display: flex;
   align-items: center;

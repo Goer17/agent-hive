@@ -4,6 +4,7 @@ import path from "node:path";
 import multer from "multer";
 import { ZodError } from "zod";
 import { WEB_DIST_DIR } from "./config.js";
+import { maxFileSizeMb } from "./store/store.js";
 import { HttpError } from "./lib/http.js";
 import { authRouter } from "./routes/auth.routes.js";
 import { agentsRouter } from "./routes/agents.routes.js";
@@ -84,7 +85,7 @@ export function createApp(): express.Express {
 
       if (error instanceof multer.MulterError) {
         if (error.code === "LIMIT_FILE_SIZE") {
-          response.status(413).json({ error: "File exceeds the 200 MB limit." });
+          response.status(413).json({ error: `File exceeds the ${maxFileSizeMb()} MB limit.` });
           return;
         }
         response.status(400).json({ error: error.message });
