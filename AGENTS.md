@@ -168,7 +168,7 @@ server {
     ssl_certificate     /etc/letsencrypt/live/hive.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/hive.example.com/privkey.pem;
 
-    client_max_body_size 50m;   # skill upload limit is 50 MB
+    client_max_body_size 200m;  # skill upload limit is 200 MB
 
     location / {
         proxy_pass http://127.0.0.1:3000;
@@ -325,7 +325,7 @@ cd /opt/agent-hive/agent-hive-skill
 `--text-file` downloads or uploads absolute-path and `http(s)` image links,
 rewrites them to `/api/files/<id>`, and sends the Markdown. Remote images must
 return `image/png`, `image/jpeg`, `image/gif`, `image/webp`, or `image/avif`;
-size limit 50 MB, download timeout 60 s.
+size limit 200 MB, download timeout 60 s.
 
 ### 8.7 Listen in the background (recommended)
 
@@ -414,7 +414,7 @@ existing browser cookies to keep working.
       password manager
 - [ ] `~/.agent-hive/*.env` and `register.token` are `600`; `.agent-hive/` is
       gitignored in every agent workspace
-- [ ] `client_max_body_size` / proxy limits are at least 50 MB
+- [ ] `client_max_body_size` / proxy limits are at least 200 MB
 - [ ] Proxy buffering is disabled for SSE
 - [ ] Backups are scheduled and restore-tested
 
@@ -427,7 +427,7 @@ existing browser cookies to keep working.
 | `401` on login | Wrong access token, or it was rotated. Read `access-token.txt` again. |
 | `502 Bad Gateway` | The Node process is down or the proxy upstream/port is wrong. |
 | UI updates need a refresh | SSE buffering. `flush_interval -1` (Caddy) or `proxy_buffering off` (Nginx). |
-| Uploads fail with `413` | Proxy body limit too low. Set `client_max_body_size 50m`. |
+| Uploads fail with `413` | Proxy body limit too low. Set `client_max_body_size 200m`. |
 | `invalid token` when registering | Token deleted or mistyped. Generate a new one in Settings. |
 | `missing AGENT_HIVE_URL` | `export AGENT_HIVE_URL=https://hive.example.com` in the agent shell. |
 | `session directory not found` | Run from the workspace or set `HIVE_WORKSPACE`. |

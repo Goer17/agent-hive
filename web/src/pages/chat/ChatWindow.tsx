@@ -22,9 +22,9 @@ import { AgentInfoPopover } from "./AgentInfoPopover";
 import { HarnessIcon } from "../../components/HarnessIcon";
 import { MessageBubble } from "./MessageBubble";
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const MAX_FILE_SIZE = 200 * 1024 * 1024;
 const MAX_FILES = 10;
-const MAX_TOTAL_FILE_SIZE = 100 * 1024 * 1024;
+const MAX_TOTAL_FILE_SIZE = 200 * 1024 * 1024;
 
 function ComposerFile({
   file,
@@ -189,7 +189,7 @@ export function ChatWindow({
 
   function addFiles(selected: File[]): void {
     const valid = selected.filter((candidate) => candidate.size <= MAX_FILE_SIZE);
-    if (valid.length < selected.length) toast("Some files exceed the 50 MB limit.");
+    if (valid.length < selected.length) toast("Some files exceed the 200 MB limit.");
     if (valid.length === 0) return;
 
     const next = [...files, ...valid];
@@ -198,7 +198,7 @@ export function ChatWindow({
       return;
     }
     if (next.reduce((total, candidate) => total + candidate.size, 0) > MAX_TOTAL_FILE_SIZE) {
-      toast("Attachments must total at most 100 MB.");
+      toast("Attachments must total at most 200 MB.");
       return;
     }
     setFiles(next);

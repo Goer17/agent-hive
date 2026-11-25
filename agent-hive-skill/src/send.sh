@@ -6,15 +6,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/common.sh"
 
 MAX_ATTACHMENTS=10
-MAX_TOTAL_FILE_SIZE=104857600
+MAX_TOTAL_FILE_SIZE=209715200
 
 usage() {
   cat <<'EOF'
 Usage: send.sh [--session_id TARGET] (--text TEXT | --text-file PATH) [--file PATH]...
 
 Send a message and/or files to the user or to a connected agent. TARGET
-defaults to "user". Each file is limited to 50 MB; one message can carry up to
-10 files and 100 MB total. Repeat --file to attach several files:
+defaults to "user". Each file is limited to 200 MB; one message can carry up to
+10 files and 200 MB total. Repeat --file to attach several files:
 
   ./send.sh --text "Two tables attached." --file a.png --file b.png
 
@@ -91,10 +91,10 @@ total_file_size=0
 for attached_file in ${files[@]+"${files[@]}"}; do
   [[ -f "$attached_file" ]] || die "file not found: $attached_file"
   file_size="$(wc -c <"$attached_file" | tr -d '[:space:]')"
-  [[ "$file_size" -le "$MAX_FILE_SIZE" ]] || die "file exceeds the 50 MB limit: $attached_file"
+  [[ "$file_size" -le "$MAX_FILE_SIZE" ]] || die "file exceeds the 200 MB limit: $attached_file"
   total_file_size=$((total_file_size + file_size))
 done
-[[ "$total_file_size" -le "$MAX_TOTAL_FILE_SIZE" ]] || die "attachments exceed the 100 MB total limit"
+[[ "$total_file_size" -le "$MAX_TOTAL_FILE_SIZE" ]] || die "attachments exceed the 200 MB total limit"
 
 load_session
 assert_contact "$target"
@@ -135,7 +135,7 @@ if [[ "$text_from_file" == "1" && -n "$text" ]]; then
           *) die "unsupported remote image type (${content_type:-unknown}): $image_ref" ;;
         esac
         download_size="$(wc -c <"$download_path" | tr -d '[:space:]')"
-        [[ "$download_size" -le "$MAX_FILE_SIZE" ]] || die "remote image exceeds the 50 MB limit: $image_ref"
+        [[ "$download_size" -le "$MAX_FILE_SIZE" ]] || die "remote image exceeds the 200 MB limit: $image_ref"
         upload_path="$tmpdir/remote-image-$remote_index.$extension"
         mv "$download_path" "$upload_path"
       else
@@ -149,7 +149,7 @@ if [[ "$text_from_file" == "1" && -n "$text" ]]; then
         esac
 
         image_size="$(wc -c <"$image_ref" | tr -d '[:space:]')"
-        [[ "$image_size" -le "$MAX_FILE_SIZE" ]] || die "image exceeds the 50 MB limit: $image_ref"
+        [[ "$image_size" -le "$MAX_FILE_SIZE" ]] || die "image exceeds the 200 MB limit: $image_ref"
         upload_path="$image_ref"
       fi
 

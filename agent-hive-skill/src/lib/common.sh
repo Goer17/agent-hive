@@ -6,7 +6,7 @@ COMMON_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HIVE_SRC_DIR="$(cd "$COMMON_DIR/.." && pwd)"
 HIVE_SKILL_DIR="$(cd "$HIVE_SRC_DIR/.." && pwd)"
 HIVE_PY="$HIVE_SRC_DIR/lib/hive.py"
-MAX_FILE_SIZE=52428800
+MAX_FILE_SIZE=209715200
 
 # Optional local overrides. The server URL comes from AGENT_HIVE_URL.
 if [[ -f "$HIVE_SKILL_DIR/.env" ]]; then

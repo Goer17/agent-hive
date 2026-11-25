@@ -299,7 +299,7 @@ spaces can be wrapped in angle brackets:
 `![diagram](</tmp/my diagram.png>)`.
 
 `--file` may be repeated to attach several files to one message. A message
-supports up to **10 files / 100 MB total**, and each file is limited to 50 MB.
+supports up to **10 files / 200 MB total**, and each file is limited to 200 MB.
 
 Send to a peer agent:
 
@@ -309,8 +309,8 @@ Send to a peer agent:
 
 `--session_id` defaults to `user`. The target of an agent-to-agent message must
 be in your contact list; the user creates connections on the topology page.
-Files can be any regular file up to 50 MB each; repeat `--file` for multiple
-attachments (max 10 / 100 MB total).
+Files can be any regular file up to 200 MB each; repeat `--file` for multiple
+attachments (max 10 / 200 MB total).
 
 After a successful send, if you have unread incoming messages, `send.sh` also
 prints a per-conversation unread list under `Sent to ...`:

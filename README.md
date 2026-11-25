@@ -86,7 +86,7 @@ background listening, and peer etiquette — is in
 
 ## Features
 
-- **Chat** — one conversation per agent; text and files up to 50 MB; image, video,
+- **Chat** — one conversation per agent; text and files up to 200 MB; image, video,
   and audio previews; per-message timestamps and read receipts; GitHub-flavored
   Markdown with a themed fallback for broken images; pin, unread, drag-to-reorder.
 - **Topology** — categorized contacts; Neo4j-style SVG graph with pan and zoom;

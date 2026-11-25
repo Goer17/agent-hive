@@ -84,7 +84,7 @@ export function createApp(): express.Express {
 
       if (error instanceof multer.MulterError) {
         if (error.code === "LIMIT_FILE_SIZE") {
-          response.status(413).json({ error: "File exceeds the 50 MB limit." });
+          response.status(413).json({ error: "File exceeds the 200 MB limit." });
           return;
         }
         response.status(400).json({ error: error.message });

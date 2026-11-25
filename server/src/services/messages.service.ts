@@ -33,7 +33,7 @@ export function createMessage(input: CreateMessageInput): MessageRecord {
   }
   const totalFileSize = files.reduce((sum, file) => sum + file.size, 0);
   if (totalFileSize > MAX_TOTAL_FILE_SIZE) {
-    badRequest("Attachments must total at most 100 MB.");
+    badRequest("Attachments must total at most 200 MB.");
   }
   if (text.length > MAX_TEXT_LENGTH) {
     badRequest(`Text must be at most ${MAX_TEXT_LENGTH} characters.`);
